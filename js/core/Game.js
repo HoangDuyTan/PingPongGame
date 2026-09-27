@@ -1,6 +1,11 @@
+import Input from "./Input.js";
+import Paddle from "../entities/Paddle.js";
+
 export default class Game {
     constructor(canvas, level) {
         this.canvas = canvas;
+        this.input = new Input();
+        this.paddle = new Paddle(canvas);
         this.ctx = canvas.getContext("2d");
 
         this.level = level;
@@ -31,19 +36,14 @@ export default class Game {
     }
 
     update(deltaTime) {
-        // Game logic will be added here later.
+        this.paddle.update(this.input, deltaTime);
     }
 
     render() {
-        this.ctx.clearRect(
-            0,
-            0,
-            this.canvas.width,
-            this.canvas.height
-        );
-
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.drawCenterLine();
         this.drawLevelText();
+        this.paddle.draw(this.ctx)
     }
 
     drawCenterLine() {
