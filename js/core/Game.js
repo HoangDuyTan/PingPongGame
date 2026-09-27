@@ -1,14 +1,20 @@
 import Input from "./Input.js";
+
 import Paddle from "../entities/Paddle.js";
 import Ball from "../entities/Ball.js";
-import {isBallCollidingWithPaddle} from "./Collision.js";
+import Target from "../entities/Target.js";
+
+import {isBallCollidingWithPaddle, isBallCollidingWithTarget} from "./Collision.js";
 
 export default class Game {
-    constructor(canvas, level) {
+    constructor(canvas, level, ui) {
         this.canvas = canvas;
         this.input = new Input();
         this.paddle = new Paddle(canvas);
         this.ball = new Ball(canvas);
+        this.targets = this.createTargets();
+        this.score = 0;
+        this.ui = ui;
         this.ctx = canvas.getContext("2d");
 
         this.level = level;
@@ -34,6 +40,53 @@ export default class Game {
         }
     }
 
+    handleTargetCollisions() {
+        for (const target of this.targets) {
+            if (!target.active) {
+                continue;
+            }
+
+            if (isBallCollidingWithTarget(this.ball, target)) {
+                target.hit();
+                this.ball.vy *= -1;
+                this.addScore(target.points);
+                break;
+            }
+        }
+    }
+
+    addScore(points) {
+        this.score += points;
+
+        if (this.ui?.score) {
+            this.ui.score.textContent = this.score;
+        }
+    }
+
+    createTargets() {
+        const targets = [];
+        const rows = 3;
+        const columns = 6;
+        const targetWidth = 110;
+        const targetHeight = 28;
+        const gapX = 18;
+        const gapY = 16;
+        const totalWidth = columns * targetWidth + (columns - 1) * gapX;
+        const startX = (this.canvas.width - totalWidth) / 2;
+        const startY = 70;
+
+        for (let row = 0; row < rows; row++) {
+            for (let column = 0; column < columns; column++) {
+                const x = startX + column * (targetWidth + gapX);
+                const y = startY + row * (targetHeight + gapY);
+                const target = new Target(x, y, targetWidth, targetHeight);
+                targets.push(target);
+            }
+        }
+
+        return targets;
+    }
+
     gameLoop(timestamp) {
         const deltaTime = (timestamp - this.lastTime) / 1000;
 
@@ -48,32 +101,20 @@ export default class Game {
     update(deltaTime) {
         this.paddle.update(this.input, deltaTime);
         this.ball.update(deltaTime);
-        this.handleCollisions()
+        this.handleCollisions();
+        this.handleTargetCollisions();
     }
 
     render() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.drawCenterLine();
         this.drawLevelText();
+
+        for (const target of this.targets) {
+            target.draw(this.ctx);
+        }
+
         this.paddle.draw(this.ctx);
         this.ball.draw(this.ctx);
-    }
-
-    drawCenterLine() {
-        const centerX = this.canvas.width / 2;
-
-        this.ctx.save();
-
-        this.ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
-        this.ctx.lineWidth = 2;
-        this.ctx.setLineDash([12, 12]);
-
-        this.ctx.beginPath();
-        this.ctx.moveTo(centerX, 0);
-        this.ctx.lineTo(centerX, this.canvas.height);
-        this.ctx.stroke();
-
-        this.ctx.restore();
     }
 
     drawLevelText() {
