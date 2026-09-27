@@ -2,9 +2,50 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+    <title>Ping Pong</title>
 
+    <link rel="stylesheet" href="css/game.css">
+    <link rel="stylesheet" href="css/variables.css">
+</head>
+
+<body>
+<main class="game-container">
+    <header class="game-header">
+        <div>
+            <h1> Màn <span id="levelNumber">1</span></h1>
+        </div>
+
+        <section class="game-controls">
+            <div class="control-buttons">
+                <button id="pauseButton" class="control-button" type="button">Tạm dừng</button>
+                <button id="restartButton" class="control-button primary-button" type="button">Chơi lại</button>
+                <a href="index.html" class="back-button">Quay lại</a>
+            </div>
+        </section>
+    </header>
+
+    <section class="game-info">
+        <div class="info-card">
+            <span class="info-label">Điểm: </span>
+            <strong id="score">0</strong>
+        </div>
+
+        <div class="info-card">
+            <span class="info-label">Mạng: </span>
+            <strong id="lives">3</strong>
+        </div>
+
+        <div class="info-card status-card">
+            <span class="info-label">Trạng Thái</span>
+            <strong id="gameStatus">Sẵn sàng</strong>
+        </div>
+    </section>
+
+    <section class="game-area">
+        <canvas id="gameCanvas" width="900" height="600"></canvas>
+    </section>
+</main>
+
+<script src="js/main.js"></script>
 </body>
 </html>

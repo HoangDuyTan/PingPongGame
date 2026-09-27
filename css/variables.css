@@ -1,0 +1,68 @@
+:root {
+    /* Màu */
+    --color-bg: #08111f;
+    --color-bg-secondary: #0d1726;
+
+    --color-surface: #111c2e;
+    --color-surface-light: #17243a;
+
+    --color-primary: #4f8cff;
+    --color-primary-hover: #6aa0ff;
+
+    --color-accent: #22d3ee;
+    --color-success: #34d399;
+    --color-warning: #fbbf24;
+    --color-danger: #fb7185;
+
+    --color-text: #f8fafc;
+    --color-text-muted: #94a3b8;
+
+    --color-border: rgba(148, 163, 184, 0.18);
+
+    /* Phông */
+    --font-main: Inter, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+
+    --font-size-sm: 14px;
+    --font-size-md: 16px;
+    --font-size-lg: 18px;
+    --font-size-xl: 24px;
+    --font-size-title: 48px;
+
+    /* Giãn dòng */
+    --space-xs: 6px;
+    --space-sm: 10px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 40px;
+
+    /* Khung */
+    --radius-sm: 8px;
+    --radius-md: 14px;
+    --radius-lg: 20px;
+
+    /* Bóng */
+    --shadow-sm: 0 8px 24px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 18px 50px rgba(0, 0, 0, 0.3);
+
+    /* Chuyển động */
+    --transition-fast: 0.2s ease;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    min-height: 100vh;
+    font-family: var(--font-main);
+    background: var(--color-bg);
+    color: var(--color-text);
+}
+
+button,
+a {
+    font: inherit;
+}

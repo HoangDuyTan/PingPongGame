@@ -1,0 +1,106 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: var(--space-xl);
+    background-image: url("../assets/images/menu-bg.jpg");
+}
+
+.main-menu {
+    width: 100%;
+    max-width: 1000px;
+    padding: var(--space-xl);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+}
+
+.game-header {
+    margin: var(--space-xl);
+}
+
+.game-header h1 {
+    font-size: 50px;
+    font-weight: 1000;
+}
+
+.game-label {
+    display: inline-block;
+    margin-bottom: var(--space-sm);
+    color: var(--color-accent);
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+
+.level-selection {
+    margin-bottom: var(--space-xl);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-lg);
+}
+
+.section-header h2 {
+    font-size: var(--font-size-xl);
+}
+
+.level-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--space-md);
+}
+
+.level-button {
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: var(--space-md);
+    background: var(--color-bg-secondary);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    transition: var(--transition-fast);
+}
+
+.level-button:hover {
+    transform: translateY(-5px);
+    transition: var(--transition-fast);
+    border: 1px solid var(--color-primary);
+}
+
+.level-button {
+    font-size: 20px;
+    font-weight: 800;
+}
+
+.boss-level {
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+}
+
+.instructions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-lg);
+    padding-top: var(--space-lg);
+    border-top: 1px solid var(--color-border);
+}
+
+.instructions h2 {
+    margin-bottom: var(--space-sm);
+    font-size: var(--font-size-lg);
+}
+
+.instructions p {
+    max-width: 500px;
+    color: var(--color-text-muted);
+    line-height: 1.5;
+}
