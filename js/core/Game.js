@@ -1,6 +1,7 @@
 import Input from "./Input.js";
 import Paddle from "../entities/Paddle.js";
 import Ball from "../entities/Ball.js";
+import {isBallCollidingWithPaddle} from "./Collision.js";
 
 export default class Game {
     constructor(canvas, level) {
@@ -26,6 +27,13 @@ export default class Game {
         this.animationFrameId = requestAnimationFrame(this.gameLoop);
     }
 
+    handleCollisions() {
+        const ballIsMovingDown = this.ball.vy > 0;
+        if (ballIsMovingDown && isBallCollidingWithPaddle(this.ball, this.paddle)) {
+            this.ball.bounceFromPaddle(this.paddle);
+        }
+    }
+
     gameLoop(timestamp) {
         const deltaTime = (timestamp - this.lastTime) / 1000;
 
@@ -40,6 +48,7 @@ export default class Game {
     update(deltaTime) {
         this.paddle.update(this.input, deltaTime);
         this.ball.update(deltaTime);
+        this.handleCollisions()
     }
 
     render() {

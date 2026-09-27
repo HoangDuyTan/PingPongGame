@@ -13,8 +13,9 @@ export default class Ball {
     reset() {
         this.x = this.canvas.width / 2;
         this.y = this.canvas.height / 2;
-        this.vx = this.speed;
-        this.vy = -this.speed;
+        const angle = Math.PI /4;
+        this.vx = this.speed * Math.cos(angle);
+        this.vy = -this.speed * Math.sin(angle);
     }
 
     update(deltaTime) {
@@ -44,6 +45,18 @@ export default class Ball {
             this.y = this.radius;
             this.vy *= -1;
         }
+    }
+
+    bounceFromPaddle(paddle) {
+        const paddleCenter = paddle.x + paddle.width / 2;
+        let relativeHit = (this.x - paddleCenter) / (paddle.width / 2);
+        relativeHit = Math.max(-1, Math.min(1, relativeHit));
+        const maxBounceAngle = Math.PI / 3;
+        const bounceAngle = relativeHit * maxBounceAngle;
+
+        this.vx = this.speed * Math.sin(bounceAngle);
+        this.vy = -this.speed * Math.cos(bounceAngle);
+        this.y = paddle.y - this.radius;
     }
 
     isOutOfBottom() {
