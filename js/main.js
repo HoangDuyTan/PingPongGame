@@ -34,7 +34,15 @@ gameStatus.textContent = "Đang chơi";
 
 //-----
 const game = new Game(canvas, selectedLevel, ui);
-canvas.addEventListener("click", () => {game.beginLevel();});
+canvas.addEventListener("click", event => {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const mouseX = (event.clientX - rect.left) * scaleX;
+    const mouseY = (event.clientY - rect.top) * scaleY;
+    game.handleCanvasClick(mouseX, mouseY);
+});
+
 restartButton.addEventListener("click", () => {game.restart()})
 pauseButton.addEventListener("click", () => {game.togglePause();});
 

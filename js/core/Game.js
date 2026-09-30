@@ -6,6 +6,7 @@ import Target from "../entities/Target.js";
 
 import {isBallCollidingWithPaddle, isBallCollidingWithTarget} from "./Collision.js";
 import {getLevelObjective} from "../levels/Objectives.js";
+import LevelManager from "./LevelManager.js";
 
 export default class Game {
     constructor(canvas, level, ui) {
@@ -13,6 +14,7 @@ export default class Game {
         this.ctx = canvas.getContext("2d");
 
         this.level = level;
+        this.levelManager = new LevelManager(this.level);
         this.objective = getLevelObjective(this.level);
         this.state = "ready";
         this.score = 0;
@@ -31,6 +33,7 @@ export default class Game {
 
         this.lastTime = 0;
         this.animationFrameId = null;
+        this.screenButtons = {};
         this.gameLoop = this.gameLoop.bind(this);
     }
 
@@ -81,21 +84,32 @@ export default class Game {
 
     createTargets() {
         const targets = [];
-        const rows = 3;
-        const columns = 6;
-        const targetWidth = 80;
-        const targetHeight = 20;
-        const gapX = 50;
-        const gapY = 20;
+        const config = this.levelManager.getTargetConfig();
+
+        const rows = config.rows;
+        const columns = config.columns;
+        const targetWidth = config.width;
+        const targetHeight = config.height;
+        const gapX = config.gapX;
+        const gapY = config.gapY;
         const totalWidth = columns * targetWidth + (columns - 1) * gapX;
         const startX = (this.canvas.width - totalWidth) / 2;
-        const startY = 70;
 
         for (let row = 0; row < rows; row++) {
+            const direction = row % 2 === 0 ? 1 : -1;
+
             for (let column = 0; column < columns; column++) {
                 const x = startX + column * (targetWidth + gapX);
-                const y = startY + row * (targetHeight + gapY);
-                const target = new Target(x, y, targetWidth, targetHeight, 100, row);
+                const y = config.startY + row * (targetHeight + gapY);
+                const target = new Target(x, y, targetWidth, targetHeight, 100, row,
+                        {
+                            moving: config.moving,
+                            speed: config.speed,
+                            moveRange: config.moveRange,
+                            direction
+                        }
+                    );
+
                 targets.push(target);
             }
         }
@@ -120,6 +134,11 @@ export default class Game {
         }
         this.paddle.update(this.input, deltaTime);
         this.ball.update(deltaTime);
+
+        for (const target of this.targets) {
+            target.update(deltaTime);
+        }
+
         if(this.ball.isOutOfBottom()) {
             this.loseLife();
             return;
@@ -199,6 +218,7 @@ export default class Game {
         this.score = 0;
         this.lives = 3;
         this.state = "playing";
+        this.screenButtons = {};
         this.targets = this.createTargets();
         this.ball.reset();
         this.paddle.reset();
@@ -294,7 +314,7 @@ export default class Game {
                     }
                 ],
 
-                hint: "Nhấn Chơi lại để chơi lại"
+                hint: ""
             },
 
             gameOver: {
@@ -380,7 +400,64 @@ export default class Game {
             this.ctx.fillText(screen.hint, centerX, panelY + panelHeight - 28);
         }
 
+        if (state === "won") {
+            const buttonWidth = 180;
+            const buttonHeight = 42;
+            const gap = 20;
+            const buttonY = panelY + panelHeight - 65;
+            const hasNextLevel = this.level < 10;
+            const menuX = hasNextLevel ? centerX - buttonWidth - gap / 2 : centerX - buttonWidth / 2;
+
+            // Menu button
+            this.ctx.fillStyle = "#334155";
+            this.ctx.fillRect(menuX, buttonY, buttonWidth, buttonHeight);
+            this.ctx.strokeStyle = "#ffffff";
+            this.ctx.lineWidth = 2;
+            this.ctx.strokeRect(menuX, buttonY, buttonWidth, buttonHeight);
+            this.ctx.fillStyle = "#ffffff";
+            this.ctx.font = "bold 13px monospace";
+            this.ctx.fillText("QUAY LẠI MENU", menuX + buttonWidth / 2, buttonY + buttonHeight / 2);
+            this.screenButtons.menu = {x: menuX, y: buttonY, width: buttonWidth, height: buttonHeight};
+
+            // Next level
+            if (hasNextLevel) {
+                const nextX = centerX + gap / 2;
+                this.ctx.fillStyle = "#2563eb";
+                this.ctx.fillRect(nextX, buttonY, buttonWidth, buttonHeight);
+                this.ctx.strokeStyle = "#ffffff";
+                this.ctx.strokeRect(nextX, buttonY, buttonWidth, buttonHeight);
+                this.ctx.fillStyle = "#ffffff";
+                this.ctx.fillText("MÀN TIẾP THEO", nextX + buttonWidth / 2, buttonY + buttonHeight / 2);
+                this.screenButtons.next = {x: nextX, y: buttonY, width: buttonWidth, height: buttonHeight};
+            } else {
+                delete this.screenButtons.next;
+            }
+        }
+
         this.ctx.restore();
+    }
+
+    handleCanvasClick(x, y) {
+        if (this.state === "objective") {
+            this.beginLevel();
+            return;
+        }
+
+        if (this.state !== "won") {
+            return;
+        }
+
+        const menuButton = this.screenButtons.menu;
+        const nextButton = this.screenButtons.next;
+
+        if (menuButton && x >= menuButton.x && x <= menuButton.x + menuButton.width && y >= menuButton.y && y <= menuButton.y + menuButton.height) {
+            window.location.href = "index.html";
+            return;
+        }
+
+        if (nextButton && x >= nextButton.x && x <= nextButton.x + nextButton.width && y >= nextButton.y && y <= nextButton.y + nextButton.height) {
+            window.location.href = `game.html?level=${this.level + 1}`;
+        }
     }
 
     drawWrappedText(text, x, y, maxWidth, lineHeight) {

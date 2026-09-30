@@ -1,5 +1,5 @@
 export default class Target {
-    constructor(x, y, width, height, points = 100, variant = 0) {
+    constructor(x, y, width, height, points = 100, variant = 0, options = {}) {
         this.x = x;
         this.y = y;
         this.width = width;
@@ -7,6 +7,11 @@ export default class Target {
         this.points = points;
         this.variant = variant;
         this.active = true;
+        this.startX = x;
+        this.moving = options.moving ?? false;
+        this.speed = options.speed ?? 0;
+        this.moveRange = options.moveRange ?? 0;
+        this.direction = options.direction ?? 1;
     }
 
     hit() {
@@ -33,6 +38,27 @@ export default class Target {
         ];
 
         return palettes[this.variant % palettes.length];
+    }
+
+    update(deltaTime) {
+        if (!this.active || !this.moving) {
+            return;
+        }
+
+        this.x += this.speed * this.direction * deltaTime;
+
+        const minX = this.startX - this.moveRange;
+        const maxX = this.startX + this.moveRange;
+
+        if (this.x <= minX) {
+            this.x = minX;
+            this.direction = 1;
+        }
+
+        if (this.x >= maxX) {
+            this.x = maxX;
+            this.direction = -1;
+        }
     }
 
     draw(ctx) {
