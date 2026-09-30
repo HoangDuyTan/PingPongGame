@@ -42,8 +42,27 @@ export default class Paddle {
 
     draw(ctx) {
         ctx.save();
-        ctx.fillStyle = "#4f8cff";
+
+        // Bóng
+        ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
+        ctx.fillRect(this.x + 4, this.y + 4, this.width, this.height);
+
+        // Viền
+        ctx.fillStyle = "#1e3a8a";
         ctx.fillRect(this.x, this.y, this.width, this.height);
+
+        // Thân
+        ctx.fillStyle = "#3b82f6";
+        ctx.fillRect(this.x + 2, this.y + 2, this.width - 4, this.height - 4);
+
+        // Highlight
+        ctx.fillStyle = "#93c5fd";
+        ctx.fillRect(this.x + 6, this.y + 4, this.width - 12, 4);
+
+        // Bóng dưới đít
+        ctx.fillStyle = "#1d4ed8";
+        ctx.fillRect(this.x + 6, this.y + this.height - 6, this.width - 12, 3);
+
         ctx.restore();
     }
 

@@ -73,10 +73,30 @@ export default class Ball {
 
     draw(ctx) {
         ctx.save();
-        ctx.fillStyle = "#fff";
+
+        // Bóng
+        ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
+        ctx.beginPath();
+        ctx.arc(this.x + 3, this.y + 3, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Viền
+        ctx.fillStyle = "#e2e8f0";
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fill();
+
+        // Màu bên trong
+        ctx.fillStyle = "#67e8f9";
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius - 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // highlight
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(this.x - 3, this.y - 5, 3, 3);
+        ctx.fillRect(this.x, this.y - 2, 2, 2);
+
         ctx.restore();
     }
 }

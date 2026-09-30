@@ -15,6 +15,11 @@ export default class Game {
         this.state = "ready";
         this.score = 0;
         this.lives = 3;
+
+        this.ctx.imageSmoothingEnabled = false;
+        this.backgroundImage = new Image();
+        this.backgroundLoaded = false;
+        this.loadBackground();
         this.ui = ui;
 
         this.input = new Input();
@@ -67,10 +72,10 @@ export default class Game {
         const targets = [];
         const rows = 3;
         const columns = 6;
-        const targetWidth = 110;
-        const targetHeight = 28;
-        const gapX = 18;
-        const gapY = 16;
+        const targetWidth = 80;
+        const targetHeight = 20;
+        const gapX = 50;
+        const gapY = 20;
         const totalWidth = columns * targetWidth + (columns - 1) * gapX;
         const startX = (this.canvas.width - totalWidth) / 2;
         const startY = 70;
@@ -79,7 +84,7 @@ export default class Game {
             for (let column = 0; column < columns; column++) {
                 const x = startX + column * (targetWidth + gapX);
                 const y = startY + row * (targetHeight + gapY);
-                const target = new Target(x, y, targetWidth, targetHeight);
+                const target = new Target(x, y, targetWidth, targetHeight, 100, row);
                 targets.push(target);
             }
         }
@@ -122,7 +127,6 @@ export default class Game {
             return;
         }
         this.ball.reset();
-        this.paddle.reset();
     }
 
     checkWinCondition() {
@@ -159,6 +163,7 @@ export default class Game {
 
     render() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.drawBackground();
         this.drawLevelText();
 
         for (const target of this.targets) {
@@ -179,6 +184,7 @@ export default class Game {
         this.state = "playing";
         this.targets = this.createTargets();
         this.ball.reset();
+        this.paddle.reset();
         this.updateUI();
     }
 
@@ -209,6 +215,35 @@ export default class Game {
             30
         );
 
+        this.ctx.restore();
+    }
+
+    getBackgroundPath() {
+        return `assets/images/lv${this.level}.png`;
+    }
+
+    loadBackground() {
+        const imagePath = this.getBackgroundPath();
+        this.backgroundLoaded = false;
+        this.backgroundImage.onload = () => {this.backgroundLoaded = true;};
+
+        this.backgroundImage.onerror = () => {
+            console.error(`Không thể load background: ${imagePath}`);
+            this.backgroundLoaded = false;
+        };
+
+        this.backgroundImage.src = imagePath;
+    }
+
+    drawBackground() {
+        if (this.backgroundLoaded) {
+            this.ctx.drawImage(this.backgroundImage, 0, 0, this.canvas.width, this.canvas.height);
+            return;
+        }
+
+        this.ctx.save();
+        this.ctx.fillStyle = "#0b1020";
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         this.ctx.restore();
     }
 }
