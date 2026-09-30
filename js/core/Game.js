@@ -173,8 +173,8 @@ export default class Game {
         this.paddle.draw(this.ctx);
         this.ball.draw(this.ctx);
 
-        if (this.state === "won" || this.state === "gameOver") {
-            this.drawEndScreen();
+        if (this.state === "paused" || this.state === "won" || this.state === "gameOver") {
+            this.drawScreen(this.state);
         }
     }
 
@@ -185,20 +185,80 @@ export default class Game {
         this.targets = this.createTargets();
         this.ball.reset();
         this.paddle.reset();
+        if (this.ui?.pauseButton) {
+            this.ui.pauseButton.textContent = "Tạm dừng";
+        }
         this.updateUI();
     }
 
-    drawEndScreen() {
+    togglePause() {
+        if (this.state === "won" || this.state === "gameOver") {
+            return;
+        }
+
+        if (this.state === "playing") {
+            this.state = "paused";
+            this.updateStatus("Tạm dừng");
+
+            if (this.ui?.pauseButton) {
+                this.ui.pauseButton.textContent = "Tiếp tục";
+            }
+
+            return;
+        }
+
+        if (this.state === "paused") {
+            this.state = "playing";
+            this.updateStatus("Đang chơi");
+
+            if (this.ui?.pauseButton) {
+                this.ui.pauseButton.textContent = "Tạm dừng";
+            }
+        }
+    }
+
+    drawScreen(state) {
+        const screens = {
+            paused: {
+                title: "TẠM DỪNG",
+                message: "Nhấn 'Tiếp tục' hoặc ESC để chơi tiếp",
+                titleColor: "#fbbf24"
+            },
+
+            won: {
+                title: "BẠN THẮNG!",
+                message: "Nhấn 'Chơi lại' để chơi lại",
+                titleColor: "#22c55e"
+            },
+
+            gameOver: {
+                title: "GAME OVER",
+                message: "Nhấn 'Chơi lại' để thử lại",
+                titleColor: "#ef4444"
+            }
+        };
+
+        const screen = screens[state];
+        if (!screen) {
+            return;
+        }
+
         this.ctx.save();
-        this.ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+
+        // Overlay
+        this.ctx.fillStyle = "rgba(0, 0, 0, 0.72)";
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
         this.ctx.textAlign = "center";
-        this.ctx.fillStyle = "#ffffff";
+        this.ctx.textBaseline = "middle";
+        this.ctx.fillStyle = screen.titleColor;
         this.ctx.font = "bold 48px Arial";
-        const title = this.state === "won" ? "Bạn thắng!" : "Thua rùi!";
-        this.ctx.fillText(title, this.canvas.width / 2, this.canvas.height / 2);
+        this.ctx.fillText(screen.title, this.canvas.width / 2, this.canvas.height / 2 - 25);
+
+        this.ctx.fillStyle = "#ffffff";
         this.ctx.font = "20px Arial";
-        this.ctx.fillText("Nhấn 'Chơi lại' để chơi lại", this.canvas.width / 2, this.canvas.height / 2 + 50);
+        this.ctx.fillText(screen.message, this.canvas.width / 2, this.canvas.height / 2 + 35);
+
         this.ctx.restore();
     }
 
