@@ -242,6 +242,70 @@ const LEVEL_CONFIGS = {
             bombRadius: 130
         }
     },
+
+    8: {
+        targets: {
+            rows: 6,
+            columns: 5,
+            width: 70,
+            height: 20,
+            gapX: 80,
+            gapY: 45,
+            startY: 100,
+
+            moving: false,
+            speed: 0,
+            moveRange: 0,
+
+            blinking: false
+        },
+
+        walls: [
+            {
+                x: 305,
+                y: 250,
+                width: 300,
+                height: 25
+            },
+        ],
+
+        balls: {
+            count: 1
+        },
+
+        specialTargets: {
+            bombs: [2, 14],
+            traps: [8, 20, 11],
+            bombRadius: 130
+        },
+
+        portals: [
+            {
+                x: 120,
+                y: 350,
+                radius: 30,
+                color: "#22d3ee"
+            },
+            {
+                x: 780,
+                y: 350,
+                radius: 30,
+                color: "#a855f7"
+            },
+            {
+                x: 680,
+                y: 100,
+                radius: 30,
+                color: "#a855f7"
+            },
+            {
+                x: 220,
+                y: 100,
+                radius: 30,
+                color: "#22d3ee"
+            },
+        ]
+    }
 };
 
 export default class LevelManager {
@@ -271,5 +335,9 @@ export default class LevelManager {
             traps: [],
             bombRadius: 0
         };
+    }
+
+    getPortalConfig() {
+        return this.getConfig().portals || [];
     }
 }

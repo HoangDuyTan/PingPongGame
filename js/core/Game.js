@@ -4,6 +4,7 @@ import Paddle from "../entities/Paddle.js";
 import Ball from "../entities/Ball.js";
 import Target from "../entities/Target.js";
 import Wall from "../entities/Wall.js";
+import Portal from "../entities/Portal.js";
 
 import {getBallRectangleCollisionSide, isBallCollidingWithPaddle, isBallCollidingWithTarget} from "./Collision.js";
 import {getLevelObjective} from "../levels/Objectives.js";
@@ -39,6 +40,7 @@ export default class Game {
 
         this.targets = this.createTargets();
         this.walls = this.createWalls();
+        this.portals = this.createPortals();
 
         this.lastTime = 0;
         this.animationFrameId = null;
@@ -222,6 +224,14 @@ export default class Game {
         });
     }
 
+    createPortals() {
+        const portalConfigs = this.levelManager.getPortalConfig();
+
+        return portalConfigs.map(config => {
+            return new Portal(config.x, config.y, config.radius, config.color);
+        });
+    }
+
     createBalls() {
         const config = this.levelManager.getBallConfig();
         const balls = [];
@@ -282,8 +292,14 @@ export default class Game {
 
         for (const ball of this.balls) {
             ball.update(deltaTime);
+
+            if ((ball.portalCooldown ?? 0) > 0) {
+                ball.portalCooldown -= deltaTime;
+            }
+
             this.handleCollisions(ball);
             this.handleWallCollisions(ball);
+            this.handlePortalCollisions(ball);
             this.handleTargetCollisions(ball);
         }
 
@@ -378,6 +394,10 @@ export default class Game {
 
         for (const wall of this.walls) {
             wall.draw(this.ctx);
+        }
+
+        for (const portal of this.portals) {
+            portal.draw(this.ctx);
         }
 
         for (const target of this.targets) {
@@ -661,6 +681,43 @@ export default class Game {
 
         if (this.ballRespawnTimer === null) {
             this.ballRespawnTimer = this.ballRespawnDelay;
+        }
+    }
+
+    handlePortalCollisions(ball) {
+        if ((ball.portalCooldown ?? 0) > 0) {
+            return;
+        }
+
+        for (let i = 0; i < this.portals.length; i += 2) {
+            const portalA = this.portals[i];
+            const portalB = this.portals[i + 1];
+
+            if (!portalB) {
+                continue;
+            }
+
+            const distanceA = Math.hypot(ball.x - portalA.x, ball.y - portalA.y);
+            const distanceB = Math.hypot(ball.x - portalB.x, ball.y - portalB.y);
+
+            let exitPortal = null;
+            if (distanceA <= ball.radius + portalA.radius) {
+                exitPortal = portalB;
+            } else if (distanceB <= ball.radius + portalB.radius) {
+                exitPortal = portalA;
+            }
+
+            if (!exitPortal) {
+                continue;
+            }
+
+            ball.x = exitPortal.x;
+            ball.y = exitPortal.y;
+            ball.preX = ball.x;
+            ball.preY = ball.y;
+            ball.portalCooldown = 0.3;
+
+            break;
         }
     }
 
