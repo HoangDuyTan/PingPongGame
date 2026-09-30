@@ -5,6 +5,7 @@ import Ball from "../entities/Ball.js";
 import Target from "../entities/Target.js";
 import Wall from "../entities/Wall.js";
 import Portal from "../entities/Portal.js";
+import GravityZone from "../entities/GravityZone.js";
 
 import {getBallRectangleCollisionSide, isBallCollidingWithPaddle, isBallCollidingWithTarget} from "./Collision.js";
 import {getLevelObjective} from "../levels/Objectives.js";
@@ -41,6 +42,7 @@ export default class Game {
         this.targets = this.createTargets();
         this.walls = this.createWalls();
         this.portals = this.createPortals();
+        this.gravityZones = this.createGravityZones();
 
         this.lastTime = 0;
         this.animationFrameId = null;
@@ -232,6 +234,14 @@ export default class Game {
         });
     }
 
+    createGravityZones() {
+        const configs = this.levelManager.getGravityZoneConfig();
+
+        return configs.map(config => {
+            return new GravityZone(config.x, config.y, config.width, config.height, config.forceX, config.forceY);
+        });
+    }
+
     createBalls() {
         const config = this.levelManager.getBallConfig();
         const balls = [];
@@ -300,6 +310,7 @@ export default class Game {
             this.handleCollisions(ball);
             this.handleWallCollisions(ball);
             this.handlePortalCollisions(ball);
+            this.handleGravityZones(ball, deltaTime);
             this.handleTargetCollisions(ball);
         }
 
@@ -391,6 +402,10 @@ export default class Game {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.drawBackground();
         this.drawLevelText();
+
+        for (const zone of this.gravityZones) {
+            zone.draw(this.ctx);
+        }
 
         for (const wall of this.walls) {
             wall.draw(this.ctx);
@@ -718,6 +733,25 @@ export default class Game {
             ball.portalCooldown = 0.3;
 
             break;
+        }
+    }
+
+    handleGravityZones(ball, deltaTime) {
+        for (const zone of this.gravityZones) {
+            if (!zone.contains(ball)) {
+                continue;
+            }
+
+            ball.vx += zone.forceX * deltaTime;
+            ball.vy += zone.forceY * deltaTime;
+
+            const maxSpeed = 420;
+            const currentSpeed = Math.hypot(ball.vx, ball.vy);
+
+            if (currentSpeed > maxSpeed) {
+                ball.vx = ball.vx / currentSpeed * maxSpeed;
+                ball.vy = ball.vy / currentSpeed * maxSpeed;
+            }
         }
     }
 
