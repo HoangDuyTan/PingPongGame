@@ -3,8 +3,9 @@ import Input from "./Input.js";
 import Paddle from "../entities/Paddle.js";
 import Ball from "../entities/Ball.js";
 import Target from "../entities/Target.js";
+import Wall from "../entities/Wall.js";
 
-import {isBallCollidingWithPaddle, isBallCollidingWithTarget} from "./Collision.js";
+import {getBallRectangleCollisionSide, isBallCollidingWithPaddle, isBallCollidingWithTarget} from "./Collision.js";
 import {getLevelObjective} from "../levels/Objectives.js";
 import LevelManager from "./LevelManager.js";
 
@@ -30,6 +31,7 @@ export default class Game {
         this.paddle = new Paddle(canvas);
         this.ball = new Ball(canvas);
         this.targets = this.createTargets();
+        this.walls = this.createWalls();
 
         this.lastTime = 0;
         this.animationFrameId = null;
@@ -77,6 +79,38 @@ export default class Game {
         }
     }
 
+    handleWallCollisions() {
+        for (const wall of this.walls) {
+            const side = getBallRectangleCollisionSide(this.ball, wall);
+
+            if (!side) {
+                continue;
+            }
+
+            if (side === "top") {
+                this.ball.y = wall.y - this.ball.radius;
+                this.ball.vy = -Math.abs(this.ball.vy);
+            }
+
+            if (side === "bottom") {
+                this.ball.y = wall.y + wall.height + this.ball.radius;
+                this.ball.vy = Math.abs(this.ball.vy);
+            }
+
+            if (side === "left") {
+                this.ball.x = wall.x - this.ball.radius;
+                this.ball.vx = -Math.abs(this.ball.vx);
+            }
+
+            if (side === "right") {
+                this.ball.x = wall.x + wall.width + this.ball.radius;
+                this.ball.vx = Math.abs(this.ball.vx);
+            }
+
+            break;
+        }
+    }
+
     addScore(points) {
         this.score += points;
         this.updateScore();
@@ -102,19 +136,27 @@ export default class Game {
                 const x = startX + column * (targetWidth + gapX);
                 const y = config.startY + row * (targetHeight + gapY);
                 const target = new Target(x, y, targetWidth, targetHeight, 100, row,
-                        {
-                            moving: config.moving,
-                            speed: config.speed,
-                            moveRange: config.moveRange,
-                            direction
-                        }
-                    );
+                    {
+                        moving: config.moving,
+                        speed: config.speed,
+                        moveRange: config.moveRange,
+                        direction
+                    }
+                );
 
                 targets.push(target);
             }
         }
 
         return targets;
+    }
+
+    createWalls() {
+        const wallConfigs = this.levelManager.getWallConfig();
+
+        return wallConfigs.map(config => {
+            return new Wall(config.x, config.y, config.width, config.height);
+        });
     }
 
     gameLoop(timestamp) {
@@ -139,12 +181,13 @@ export default class Game {
             target.update(deltaTime);
         }
 
-        if(this.ball.isOutOfBottom()) {
+        if (this.ball.isOutOfBottom()) {
             this.loseLife();
             return;
         }
         this.handleCollisions();
         this.handleTargetCollisions();
+        this.handleWallCollisions()
         this.checkWinCondition();
     }
 
@@ -195,6 +238,10 @@ export default class Game {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.drawBackground();
         this.drawLevelText();
+
+        for (const wall of this.walls) {
+            wall.draw(this.ctx);
+        }
 
         for (const target of this.targets) {
             target.draw(this.ctx);
@@ -511,7 +558,9 @@ export default class Game {
     loadBackground() {
         const imagePath = this.getBackgroundPath();
         this.backgroundLoaded = false;
-        this.backgroundImage.onload = () => {this.backgroundLoaded = true;};
+        this.backgroundImage.onload = () => {
+            this.backgroundLoaded = true;
+        };
 
         this.backgroundImage.onerror = () => {
             console.error(`Không thể load background: ${imagePath}`);

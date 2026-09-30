@@ -18,3 +18,32 @@ export function isBallCollidingWithTarget(ball, target) {
 
     return isBallCollidingWithRectangle(ball, target);
 }
+
+export function getBallRectangleCollisionSide(ball, rectangle) {
+    if (!isBallCollidingWithRectangle(ball, rectangle)) {
+        return null;
+    }
+
+    const previousLeft = ball.preX - ball.radius;
+    const previousRight = ball.preX + ball.radius;
+    const previousTop = ball.preY - ball.radius;
+    const previousBottom = ball.preY + ball.radius;
+
+    if (previousBottom <= rectangle.y) {
+        return "top";
+    }
+
+    if (previousTop >= rectangle.y + rectangle.height) {
+        return "bottom";
+    }
+
+    if (previousRight <= rectangle.x) {
+        return "left";
+    }
+
+    if (previousLeft >= rectangle.x + rectangle.width) {
+        return "right";
+    }
+
+    return null;
+}

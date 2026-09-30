@@ -29,7 +29,47 @@ const LEVEL_CONFIGS = {
             speed: 70,
             moveRange: 45
         }
-    }
+    },
+
+    3: {
+        targets: {
+            rows: 4,
+            columns: 5,
+            width: 50,
+            height: 20,
+            gapX: 100,
+            gapY: 70,
+            startY: 70,
+
+            moving: true,
+            speed: 90,
+            moveRange: 90
+        },
+
+        walls: [
+            {
+                x: 220,
+                y: 230,
+                width: 25,
+                height: 150
+            },
+
+            {
+                x: 655,
+                y: 230,
+                width: 25,
+                height: 150
+            },
+
+            {
+                x: 370,
+                y: 315,
+                width: 160,
+                height: 22
+            }
+        ]
+    },
+
 };
 
 export default class LevelManager {
@@ -39,6 +79,10 @@ export default class LevelManager {
 
     getConfig() {
         return LEVEL_CONFIGS[this.level] || LEVEL_CONFIGS[1];
+    }
+
+    getWallConfig() {
+        return this.getConfig().walls || [];
     }
 
     getTargetConfig() {
