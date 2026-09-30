@@ -66,100 +66,47 @@ export default class Game {
         this.updateStatus("Đang chơi");
     }
 
-    handleCollisions(ball) {
-        const ballIsMovingDown = ball.vy > 0;
-        const ballWasAbovePaddle = ball.preY + ball.radius <= this.paddle.y;
-
-        if (ballIsMovingDown && ballWasAbovePaddle && isBallCollidingWithPaddle(ball, this.paddle)) {
-            ball.bounceFromPaddle(this.paddle);
-        }
-    }
-
-    handleTargetCollisions(ball) {
-        for (const target of this.targets) {
-            if (!target.active) {
-                continue;
-            }
-
-            if (isBallCollidingWithTarget(ball, target)) {
-                target.hit();
-                this.addScore(target.points);
-
-                // lv7 - bomb
-                if (target.type === "bomb") {
-                    this.explodeBomb(target);
-                }
-
-                // lv7 - trap
-                if (target.type === "trap") {
-                    this.paddle.speed = 150;
-                    this.trapTimer = this.trapDuration;
-                }
-
-                ball.vy *= -1;
-                break;
-            }
-        }
-    }
-
-    handleWallCollisions(ball) {
-        for (const wall of this.walls) {
-            const side = getBallRectangleCollisionSide(ball, wall);
-
-            if (!side) {
-                continue;
-            }
-
-            if (side === "top") {
-                ball.y = wall.y - ball.radius;
-                ball.vy = -Math.abs(ball.vy);
-            }
-
-            if (side === "bottom") {
-                ball.y = wall.y + wall.height + ball.radius;
-                ball.vy = Math.abs(ball.vy);
-            }
-
-            if (side === "left") {
-                ball.x = wall.x - ball.radius;
-                ball.vx = -Math.abs(ball.vx);
-            }
-
-            if (side === "right") {
-                ball.x = wall.x + wall.width + ball.radius;
-                ball.vx = Math.abs(ball.vx);
-            }
-
-            break;
-        }
-    }
-
     addScore(points) {
         this.score += points;
         this.updateScore();
     }
 
-    explodeBomb(bomb) {
-        const config = this.levelManager.getSpecialTargetConfig();
+    gameLoop(timestamp) {
+        const deltaTime = (timestamp - this.lastTime) / 1000;
 
-        for (const target of this.targets) {
-            if (!target.active) {
-                continue;
-            }
+        this.lastTime = timestamp;
 
-            const bombX = bomb.x + bomb.width / 2;
-            const bombY = bomb.y + bomb.height / 2;
-            const targetX = target.x + target.width / 2;
-            const targetY = target.y + target.height / 2;
-            const distance = Math.hypot(targetX - bombX, targetY - bombY);
+        this.update(deltaTime);
+        this.render();
 
-            if (distance <= config.bombRadius) {
-                target.hit();
-                this.addScore(target.points);
-            }
+        this.animationFrameId = requestAnimationFrame(this.gameLoop);
+    }
+
+    loseLife() {
+        this.lives--;
+        this.updateLives();
+        if (this.lives <= 0) {
+            this.state = "gameOver";
+            this.updateStatus("Thua");
+            return;
+        }
+
+        this.ballRespawnTimer = null;
+        this.balls = this.createBalls();
+
+        this.trapTimer = 0;
+        this.paddle.speed = this.normalPaddleSpeed;
+    }
+
+    checkWinCondition() {
+        const allTargetDestroyed = this.targets.every(target => !target.active);
+        if (allTargetDestroyed) {
+            this.state = "won";
+            this.updateStatus("Bạn đã chiến thắng!");
         }
     }
 
+    // CREATE
     createTargets() {
         const targets = [];
         const config = this.levelManager.getTargetConfig();
@@ -192,30 +139,49 @@ export default class Game {
                     type = "trap";
                 }
 
-                const target = new Target(x, y, targetWidth, targetHeight, 100, row,
-                    {
-                        // lv2
-                        moving: config.moving,
-                        speed: config.speed,
-                        moveRange: config.moveRange,
-                        direction,
+                const target = new Target(x, y, targetWidth, targetHeight, 100, row, {
+                    // lv2
+                    moving: config.moving,
+                    speed: config.speed,
+                    moveRange: config.moveRange,
+                    direction,
 
-                        // lv4
-                        blinking: config.blinking,
-                        visibleTime: config.visibleTime,
-                        hiddenTime: config.hiddenTime,
-                        blinkOffset: (row * columns + column) * 0.08,
+                    // lv4
+                    blinking: config.blinking,
+                    visibleTime: config.visibleTime,
+                    hiddenTime: config.hiddenTime,
+                    blinkOffset: (row * columns + column) * 0.08,
 
-                        // lv7
-                        type,
-                    }
-                );
+                    // lv7
+                    type,
+                });
 
                 targets.push(target);
             }
         }
 
         return targets;
+    }
+
+    explodeBomb(bomb) {
+        const config = this.levelManager.getSpecialTargetConfig();
+
+        for (const target of this.targets) {
+            if (!target.active) {
+                continue;
+            }
+
+            const bombX = bomb.x + bomb.width / 2;
+            const bombY = bomb.y + bomb.height / 2;
+            const targetX = target.x + target.width / 2;
+            const targetY = target.y + target.height / 2;
+            const distance = Math.hypot(targetX - bombX, targetY - bombY);
+
+            if (distance <= config.bombRadius) {
+                target.hit();
+                this.addScore(target.points);
+            }
+        }
     }
 
     createWalls() {
@@ -247,14 +213,9 @@ export default class Game {
         const balls = [];
 
         for (let i = 0; i < config.count; i++) {
-            const ball = new Ball(
-                this.canvas,
-                {
-                    blinking: config.blinking,
-                    visibleTime: config.visibleTime,
-                    hiddenTime: config.hiddenTime
-                }
-            );
+            const ball = new Ball(this.canvas, {
+                blinking: config.blinking, visibleTime: config.visibleTime, hiddenTime: config.hiddenTime
+            });
 
             if (config.count > 1) {
                 const angle = 70 * Math.PI / 180;
@@ -270,17 +231,7 @@ export default class Game {
         return balls;
     }
 
-    gameLoop(timestamp) {
-        const deltaTime = (timestamp - this.lastTime) / 1000;
-
-        this.lastTime = timestamp;
-
-        this.update(deltaTime);
-        this.render();
-
-        this.animationFrameId = requestAnimationFrame(this.gameLoop);
-    }
-
+    // UPDATE
     update(deltaTime) {
         if (this.state !== "playing") {
             return;
@@ -350,30 +301,6 @@ export default class Game {
         this.checkWinCondition();
     }
 
-    loseLife() {
-        this.lives--;
-        this.updateLives();
-        if (this.lives <= 0) {
-            this.state = "gameOver";
-            this.updateStatus("Thua");
-            return;
-        }
-
-        this.ballRespawnTimer = null;
-        this.balls = this.createBalls();
-
-        this.trapTimer = 0;
-        this.paddle.speed = this.normalPaddleSpeed;
-    }
-
-    checkWinCondition() {
-        const allTargetDestroyed = this.targets.every(target => !target.active);
-        if (allTargetDestroyed) {
-            this.state = "won";
-            this.updateStatus("Bạn đã chiến thắng!");
-        }
-    }
-
     updateScore() {
         if (this.ui?.score) {
             this.ui.score.textContent = this.score;
@@ -424,12 +351,7 @@ export default class Game {
             ball.draw(this.ctx);
         }
 
-        const screenStates = [
-            "objective",
-            "paused",
-            "won",
-            "gameOver",
-        ];
+        const screenStates = ["objective", "paused", "won", "gameOver",];
         if (screenStates.includes(this.state)) {
             this.drawScreen(this.state);
         }
@@ -480,6 +402,168 @@ export default class Game {
         }
     }
 
+    // HANDLE
+    handleCollisions(ball) {
+        const ballIsMovingDown = ball.vy > 0;
+        const ballWasAbovePaddle = ball.preY + ball.radius <= this.paddle.y;
+
+        if (ballIsMovingDown && ballWasAbovePaddle && isBallCollidingWithPaddle(ball, this.paddle)) {
+            ball.bounceFromPaddle(this.paddle);
+        }
+    }
+
+    handleTargetCollisions(ball) {
+        for (const target of this.targets) {
+            if (!target.active) {
+                continue;
+            }
+
+            if (isBallCollidingWithTarget(ball, target)) {
+                target.hit();
+                this.addScore(target.points);
+
+                // lv7 - bomb
+                if (target.type === "bomb") {
+                    this.explodeBomb(target);
+                }
+
+                // lv7 - trap
+                if (target.type === "trap") {
+                    this.paddle.speed = 150;
+                    this.trapTimer = this.trapDuration;
+                }
+
+                ball.vy *= -1;
+                break;
+            }
+        }
+    }
+
+    handleWallCollisions(ball) {
+        for (const wall of this.walls) {
+            const side = getBallRectangleCollisionSide(ball, wall);
+
+            if (!side) {
+                continue;
+            }
+
+            if (side === "top") {
+                ball.y = wall.y - ball.radius;
+                ball.vy = -Math.abs(ball.vy);
+            }
+
+            if (side === "bottom") {
+                ball.y = wall.y + wall.height + ball.radius;
+                ball.vy = Math.abs(ball.vy);
+            }
+
+            if (side === "left") {
+                ball.x = wall.x - ball.radius;
+                ball.vx = -Math.abs(ball.vx);
+            }
+
+            if (side === "right") {
+                ball.x = wall.x + wall.width + ball.radius;
+                ball.vx = Math.abs(ball.vx);
+            }
+
+            break;
+        }
+    }
+
+    handleCanvasClick(x, y) {
+        if (this.state === "objective") {
+            this.beginLevel();
+            return;
+        }
+
+        if (this.state !== "won") {
+            return;
+        }
+
+        const menuButton = this.screenButtons.menu;
+        const nextButton = this.screenButtons.next;
+
+        if (menuButton && x >= menuButton.x && x <= menuButton.x + menuButton.width && y >= menuButton.y && y <= menuButton.y + menuButton.height) {
+            window.location.href = "index.html";
+            return;
+        }
+
+        if (nextButton && x >= nextButton.x && x <= nextButton.x + nextButton.width && y >= nextButton.y && y <= nextButton.y + nextButton.height) {
+            window.location.href = `game.html?level=${this.level + 1}`;
+        }
+    }
+
+    handleLostBalls() {
+        this.balls = this.balls.filter(ball => !ball.isOutOfBottom());
+        if (this.balls.length === 0) {
+            this.ballRespawnTimer = null;
+            this.loseLife();
+            return;
+        }
+
+        if (this.ballRespawnTimer === null) {
+            this.ballRespawnTimer = this.ballRespawnDelay;
+        }
+    }
+
+    handlePortalCollisions(ball) {
+        if ((ball.portalCooldown ?? 0) > 0) {
+            return;
+        }
+
+        for (let i = 0; i < this.portals.length; i += 2) {
+            const portalA = this.portals[i];
+            const portalB = this.portals[i + 1];
+
+            if (!portalB) {
+                continue;
+            }
+
+            const distanceA = Math.hypot(ball.x - portalA.x, ball.y - portalA.y);
+            const distanceB = Math.hypot(ball.x - portalB.x, ball.y - portalB.y);
+
+            let exitPortal = null;
+            if (distanceA <= ball.radius + portalA.radius) {
+                exitPortal = portalB;
+            } else if (distanceB <= ball.radius + portalB.radius) {
+                exitPortal = portalA;
+            }
+
+            if (!exitPortal) {
+                continue;
+            }
+
+            ball.x = exitPortal.x;
+            ball.y = exitPortal.y;
+            ball.preX = ball.x;
+            ball.preY = ball.y;
+            ball.portalCooldown = 0.3;
+
+            break;
+        }
+    }
+
+    handleGravityZones(ball, deltaTime) {
+        for (const zone of this.gravityZones) {
+            if (!zone.contains(ball)) {
+                continue;
+            }
+
+            ball.vx += zone.forceX * deltaTime;
+            ball.vy += zone.forceY * deltaTime;
+
+            const maxSpeed = 420;
+            const currentSpeed = Math.hypot(ball.vx, ball.vy);
+
+            if (currentSpeed > maxSpeed) {
+                ball.vx = ball.vx / currentSpeed * maxSpeed;
+                ball.vy = ball.vy / currentSpeed * maxSpeed;
+            }
+        }
+    }
+
+    // DRAW
     drawScreen(state) {
         const screens = {
             objective: {
@@ -488,74 +572,43 @@ export default class Game {
                 color: "#38bdf8",
                 height: 500,
 
-                sections: [
-                    {
-                        label: "MỤC TIÊU",
-                        text: this.objective.objective,
-                        color: "#fbbf24"
-                    },
-                    {
-                        label: "CƠ CHẾ",
-                        text: this.objective.mechanic,
-                        color: "#a78bfa"
-                    },
-                    {
-                        label: "GỢI Ý",
-                        text: this.objective.tip,
-                        color: "#22d3ee"
-                    }
-                ],
+                sections: [{
+                    label: "MỤC TIÊU", text: this.objective.objective, color: "#fbbf24"
+                }, {
+                    label: "CƠ CHẾ", text: this.objective.mechanic, color: "#a78bfa"
+                }, {
+                    label: "GỢI Ý", text: this.objective.tip, color: "#22d3ee"
+                }],
 
                 hint: "ENTER / CLICK ĐỂ BẮT ĐẦU"
             },
 
             paused: {
-                title: "TẠM DỪNG",
-                subtitle: "",
-                color: "#fbbf24",
-                height: 230,
+                title: "TẠM DỪNG", subtitle: "", color: "#fbbf24", height: 230,
 
-                sections: [
-                    {
-                        label: "",
-                        text: "Nhấn Tiếp tục hoặc Space để chơi tiếp",
-                        color: "#ffffff"
-                    }
-                ],
+                sections: [{
+                    label: "", text: "Nhấn Tiếp tục hoặc Space để chơi tiếp", color: "#ffffff"
+                }],
 
                 hint: ""
             },
 
             won: {
-                title: "BẠN THẮNG!",
-                subtitle: "",
-                color: "#22c55e",
-                height: 230,
+                title: "BẠN THẮNG!", subtitle: "", color: "#22c55e", height: 230,
 
-                sections: [
-                    {
-                        label: "",
-                        text: "Bạn đã hoàn thành toàn bộ mục tiêu.",
-                        color: "#ffffff"
-                    }
-                ],
+                sections: [{
+                    label: "", text: "Bạn đã hoàn thành toàn bộ mục tiêu.", color: "#ffffff"
+                }],
 
                 hint: ""
             },
 
             gameOver: {
-                title: "GAME OVER",
-                subtitle: "",
-                color: "#ef4444",
-                height: 230,
+                title: "GAME OVER", subtitle: "", color: "#ef4444", height: 230,
 
-                sections: [
-                    {
-                        label: "",
-                        text: "Bạn đã hết mạng.",
-                        color: "#ffffff"
-                    }
-                ],
+                sections: [{
+                    label: "", text: "Bạn đã hết mạng.", color: "#ffffff"
+                }],
 
                 hint: "Nhấn Chơi lại để thử lại"
             }
@@ -663,98 +716,6 @@ export default class Game {
         this.ctx.restore();
     }
 
-    handleCanvasClick(x, y) {
-        if (this.state === "objective") {
-            this.beginLevel();
-            return;
-        }
-
-        if (this.state !== "won") {
-            return;
-        }
-
-        const menuButton = this.screenButtons.menu;
-        const nextButton = this.screenButtons.next;
-
-        if (menuButton && x >= menuButton.x && x <= menuButton.x + menuButton.width && y >= menuButton.y && y <= menuButton.y + menuButton.height) {
-            window.location.href = "index.html";
-            return;
-        }
-
-        if (nextButton && x >= nextButton.x && x <= nextButton.x + nextButton.width && y >= nextButton.y && y <= nextButton.y + nextButton.height) {
-            window.location.href = `game.html?level=${this.level + 1}`;
-        }
-    }
-
-    handleLostBalls() {
-        this.balls = this.balls.filter(ball => !ball.isOutOfBottom());
-        if (this.balls.length === 0) {
-            this.ballRespawnTimer = null;
-            this.loseLife();
-            return;
-        }
-
-        if (this.ballRespawnTimer === null) {
-            this.ballRespawnTimer = this.ballRespawnDelay;
-        }
-    }
-
-    handlePortalCollisions(ball) {
-        if ((ball.portalCooldown ?? 0) > 0) {
-            return;
-        }
-
-        for (let i = 0; i < this.portals.length; i += 2) {
-            const portalA = this.portals[i];
-            const portalB = this.portals[i + 1];
-
-            if (!portalB) {
-                continue;
-            }
-
-            const distanceA = Math.hypot(ball.x - portalA.x, ball.y - portalA.y);
-            const distanceB = Math.hypot(ball.x - portalB.x, ball.y - portalB.y);
-
-            let exitPortal = null;
-            if (distanceA <= ball.radius + portalA.radius) {
-                exitPortal = portalB;
-            } else if (distanceB <= ball.radius + portalB.radius) {
-                exitPortal = portalA;
-            }
-
-            if (!exitPortal) {
-                continue;
-            }
-
-            ball.x = exitPortal.x;
-            ball.y = exitPortal.y;
-            ball.preX = ball.x;
-            ball.preY = ball.y;
-            ball.portalCooldown = 0.3;
-
-            break;
-        }
-    }
-
-    handleGravityZones(ball, deltaTime) {
-        for (const zone of this.gravityZones) {
-            if (!zone.contains(ball)) {
-                continue;
-            }
-
-            ball.vx += zone.forceX * deltaTime;
-            ball.vy += zone.forceY * deltaTime;
-
-            const maxSpeed = 420;
-            const currentSpeed = Math.hypot(ball.vx, ball.vy);
-
-            if (currentSpeed > maxSpeed) {
-                ball.vx = ball.vx / currentSpeed * maxSpeed;
-                ball.vy = ball.vy / currentSpeed * maxSpeed;
-            }
-        }
-    }
-
     drawWrappedText(text, x, y, maxWidth, lineHeight) {
         const words = text.split(" ");
         let line = "";
@@ -790,11 +751,7 @@ export default class Game {
         this.ctx.font = "16px Arial";
         this.ctx.textAlign = "center";
 
-        this.ctx.fillText(
-            `Màn ${this.level}`,
-            this.canvas.width / 2,
-            30
-        );
+        this.ctx.fillText(`Màn ${this.level}`, this.canvas.width / 2, 30);
 
         this.ctx.restore();
     }
