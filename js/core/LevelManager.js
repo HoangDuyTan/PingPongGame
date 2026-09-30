@@ -152,6 +152,40 @@ const LEVEL_CONFIGS = {
         balls: {
             count: 2
         }
+    },
+
+    6: {
+        targets: {
+            rows: 7,
+            columns: 6,
+            width: 80,
+            height: 20,
+            gapX: 50,
+            gapY: 20,
+            startY: 70,
+
+            moving: true,
+            speed: 40,
+            moveRange: 20,
+
+            blinking: false
+        },
+
+        walls: [
+            {
+                x: 305,
+                y: 250,
+                width: 300,
+                height: 25
+            },
+        ],
+
+        balls: {
+            count: 1,
+            blinking: true,
+            visibleTime: 2.5,
+            hiddenTime: 1
+        }
     }
 };
 

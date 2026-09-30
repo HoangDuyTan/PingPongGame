@@ -1,5 +1,5 @@
 export default class Ball {
-    constructor(canvas) {
+    constructor(canvas, options = {}) {
         this.canvas = canvas;
         this.radius = 10;
         this.speed = 300;
@@ -9,6 +9,14 @@ export default class Ball {
         this.vy = 0;
         this.preX = 0;
         this.preY = 0;
+
+        // lv6
+        this.blinking = options.blinking ?? false;
+        this.visibleTime = options.visibleTime ?? 2.5;
+        this.hiddenTime = options.hiddenTime ?? 1;
+        this.visible = true;
+        this.blinkTimer = 0;
+
         this.reset();
     }
 
@@ -28,6 +36,17 @@ export default class Ball {
         this.x += this.vx * deltaTime;
         this.y += this.vy * deltaTime;
         this.checkWallCollision();
+
+        // lv6
+        if (this.blinking) {
+            this.blinkTimer += deltaTime;
+
+            const duration = this.visible ? this.visibleTime : this.hiddenTime;
+            if (this.blinkTimer >= duration) {
+                this.blinkTimer -= duration;
+                this.visible = !this.visible;
+            }
+        }
     }
 
     checkWallCollision() {
@@ -72,6 +91,10 @@ export default class Ball {
     }
 
     draw(ctx) {
+        if (!this.visible) {
+            return;
+        }
+
         ctx.save();
 
         // Bóng

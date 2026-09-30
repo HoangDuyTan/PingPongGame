@@ -173,7 +173,14 @@ export default class Game {
         const balls = [];
 
         for (let i = 0; i < config.count; i++) {
-            const ball = new Ball(this.canvas);
+            const ball = new Ball(
+                this.canvas,
+                {
+                    blinking: config.blinking,
+                    visibleTime: config.visibleTime,
+                    hiddenTime: config.hiddenTime
+                }
+            );
 
             if (config.count > 1) {
                 const angle = 70 * Math.PI / 180;
