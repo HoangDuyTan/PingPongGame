@@ -31,7 +31,7 @@ const LEVEL_OBJECTIVES = {
         name: "Multi Ball",
         objective: "Kiểm soát nhiều bóng cùng lúc và phá hủy toàn bộ mục tiêu.",
         mechanic: "Hai quả bóng sẽ cùng xuất hiện trên sân.",
-        tip: "Ưu tiên giữ cả hai bóng trên sân để phá mục tiêu nhanh hơn."
+        tip: "Ưu tiên giữ cả hai bóng trên sân để phá mục tiêu nhanh hơn, chỉ cần 1 bóng trên sân thì sau một thời gian bóng bị rơi sẽ hồi sinh, khi cả 2 bóng cùng rơi thì mới mất mạng."
     },
 
     6: {

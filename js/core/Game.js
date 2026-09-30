@@ -29,7 +29,9 @@ export default class Game {
 
         this.input = new Input();
         this.paddle = new Paddle(canvas);
-        this.ball = new Ball(canvas);
+        this.balls = this.createBalls();
+        this.ballRespawnTimer = null;
+        this.ballRespawnDelay = 2;
         this.targets = this.createTargets();
         this.walls = this.createWalls();
 
@@ -55,56 +57,56 @@ export default class Game {
         this.updateStatus("Đang chơi");
     }
 
-    handleCollisions() {
-        const ballIsMovingDown = this.ball.vy > 0;
-        const ballWasAbovePaddle = this.ball.preY + this.ball.radius <= this.paddle.y;
+    handleCollisions(ball) {
+        const ballIsMovingDown = ball.vy > 0;
+        const ballWasAbovePaddle = ball.preY + ball.radius <= this.paddle.y;
 
-        if (ballIsMovingDown && ballWasAbovePaddle && isBallCollidingWithPaddle(this.ball, this.paddle)) {
-            this.ball.bounceFromPaddle(this.paddle);
+        if (ballIsMovingDown && ballWasAbovePaddle && isBallCollidingWithPaddle(ball, this.paddle)) {
+            ball.bounceFromPaddle(this.paddle);
         }
     }
 
-    handleTargetCollisions() {
+    handleTargetCollisions(ball) {
         for (const target of this.targets) {
             if (!target.active) {
                 continue;
             }
 
-            if (isBallCollidingWithTarget(this.ball, target)) {
+            if (isBallCollidingWithTarget(ball, target)) {
                 target.hit();
-                this.ball.vy *= -1;
+                ball.vy *= -1;
                 this.addScore(target.points);
                 break;
             }
         }
     }
 
-    handleWallCollisions() {
+    handleWallCollisions(ball) {
         for (const wall of this.walls) {
-            const side = getBallRectangleCollisionSide(this.ball, wall);
+            const side = getBallRectangleCollisionSide(ball, wall);
 
             if (!side) {
                 continue;
             }
 
             if (side === "top") {
-                this.ball.y = wall.y - this.ball.radius;
-                this.ball.vy = -Math.abs(this.ball.vy);
+                ball.y = wall.y - ball.radius;
+                ball.vy = -Math.abs(ball.vy);
             }
 
             if (side === "bottom") {
-                this.ball.y = wall.y + wall.height + this.ball.radius;
-                this.ball.vy = Math.abs(this.ball.vy);
+                ball.y = wall.y + wall.height + ball.radius;
+                ball.vy = Math.abs(ball.vy);
             }
 
             if (side === "left") {
-                this.ball.x = wall.x - this.ball.radius;
-                this.ball.vx = -Math.abs(this.ball.vx);
+                ball.x = wall.x - ball.radius;
+                ball.vx = -Math.abs(ball.vx);
             }
 
             if (side === "right") {
-                this.ball.x = wall.x + wall.width + this.ball.radius;
-                this.ball.vx = Math.abs(this.ball.vx);
+                ball.x = wall.x + wall.width + ball.radius;
+                ball.vx = Math.abs(ball.vx);
             }
 
             break;
@@ -166,6 +168,27 @@ export default class Game {
         });
     }
 
+    createBalls() {
+        const config = this.levelManager.getBallConfig();
+        const balls = [];
+
+        for (let i = 0; i < config.count; i++) {
+            const ball = new Ball(this.canvas);
+
+            if (config.count > 1) {
+                const angle = 70 * Math.PI / 180;
+                const direction = i % 2 === 0 ? -1 : 1;
+
+                ball.vx = direction * ball.speed * Math.cos(angle);
+                ball.vy = -ball.speed * Math.sin(angle);
+            }
+
+            balls.push(ball);
+        }
+
+        return balls;
+    }
+
     gameLoop(timestamp) {
         const deltaTime = (timestamp - this.lastTime) / 1000;
 
@@ -181,20 +204,53 @@ export default class Game {
         if (this.state !== "playing") {
             return;
         }
+
         this.paddle.update(this.input, deltaTime);
-        this.ball.update(deltaTime);
 
         for (const target of this.targets) {
             target.update(deltaTime);
         }
 
-        if (this.ball.isOutOfBottom()) {
-            this.loseLife();
+        for (const ball of this.balls) {
+            ball.update(deltaTime);
+            this.handleCollisions(ball);
+            this.handleWallCollisions(ball);
+            this.handleTargetCollisions(ball);
+        }
+
+        const hasLostBall = this.balls.some(ball => ball.isOutOfBottom());
+        if (hasLostBall) {
+            this.handleLostBalls();
+        }
+
+        if (this.ballRespawnTimer !== null && this.state === "playing") {
+            this.ballRespawnTimer -= deltaTime;
+
+            if (this.ballRespawnTimer <= 0) {
+                const ballConfig = this.levelManager.getBallConfig();
+
+                while (this.balls.length < ballConfig.count) {
+                    const newBall = new Ball(this.canvas);
+                    newBall.x = this.paddle.x + this.paddle.width / 2;
+                    newBall.y = this.paddle.y - newBall.radius - 5;
+                    newBall.preX = newBall.x;
+                    newBall.preY = newBall.y;
+
+                    const otherBall = this.balls[0];
+                    newBall.vx = -Math.sign(otherBall.vx) * Math.abs(newBall.vx);
+                    newBall.vy = -Math.abs(newBall.vy);
+
+                    this.balls.push(newBall);
+                }
+
+                this.ballRespawnTimer = null;
+            }
+        }
+
+        if (this.state !== "playing") {
             return;
         }
-        this.handleCollisions();
-        this.handleTargetCollisions();
-        this.handleWallCollisions()
+
         this.checkWinCondition();
     }
 
@@ -206,7 +262,9 @@ export default class Game {
             this.updateStatus("Thua");
             return;
         }
-        this.ball.reset();
+
+        this.ballRespawnTimer = null;
+        this.balls = this.createBalls();
     }
 
     checkWinCondition() {
@@ -255,7 +313,9 @@ export default class Game {
         }
 
         this.paddle.draw(this.ctx);
-        this.ball.draw(this.ctx);
+        for (const ball of this.balls) {
+            ball.draw(this.ctx);
+        }
 
         const screenStates = [
             "objective",
@@ -274,7 +334,8 @@ export default class Game {
         this.state = "playing";
         this.screenButtons = {};
         this.targets = this.createTargets();
-        this.ball.reset();
+        this.balls = this.createBalls();
+        this.ballRespawnTimer = null;
         this.paddle.reset();
         if (this.ui?.pauseButton) {
             this.ui.pauseButton.textContent = "Tạm dừng";
@@ -511,6 +572,19 @@ export default class Game {
 
         if (nextButton && x >= nextButton.x && x <= nextButton.x + nextButton.width && y >= nextButton.y && y <= nextButton.y + nextButton.height) {
             window.location.href = `game.html?level=${this.level + 1}`;
+        }
+    }
+
+    handleLostBalls() {
+        this.balls = this.balls.filter(ball => !ball.isOutOfBottom());
+        if (this.balls.length === 0) {
+            this.ballRespawnTimer = null;
+            this.loseLife();
+            return;
+        }
+
+        if (this.ballRespawnTimer === null) {
+            this.ballRespawnTimer = this.ballRespawnDelay;
         }
     }
 
