@@ -5,25 +5,38 @@ export default class Paddle {
         this.height = 15;
         this.x = (canvas.width - this.width) / 2;
         this.y = canvas.height - 50;
+        this.vx = 0;
         this.speed = 500;
     }
 
     update(input, deltaTime) {
+        let direction = 0;
+
         if (input.isKeyPressed("ArrowLeft") || input.isKeyPressed("KeyA")) {
-            this.x -= this.speed * deltaTime;
+            direction -= 1;
         }
         if (input.isKeyPressed("ArrowRight") || input.isKeyPressed("KeyD")) {
-            this.x += this.speed * deltaTime;
+            direction += 1;
         }
+
+        this.vx = direction * this.speed;
+        this.x += this.vx * deltaTime;
         this.keepInsideCanvas();
     }
 
     keepInsideCanvas() {
         if (this.x < 0) {
             this.x = 0;
+            if (this.vx < 0) {
+                this.vx = 0;
+            }
         }
+
         if (this.x + this.width > this.canvas.width) {
             this.x = this.canvas.width - this.width;
+            if (this.vx > 0) {
+                this.vx = 0;
+            }
         }
     }
 
@@ -36,5 +49,6 @@ export default class Paddle {
 
     reset() {
         this.x = (this.canvas.width - this.width) / 2;
+        this.vx = 0;
     }
 }

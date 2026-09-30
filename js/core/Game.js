@@ -36,7 +36,9 @@ export default class Game {
 
     handleCollisions() {
         const ballIsMovingDown = this.ball.vy > 0;
-        if (ballIsMovingDown && isBallCollidingWithPaddle(this.ball, this.paddle)) {
+        const ballWasAbovePaddle = this.ball.preY + this.ball.radius <= this.paddle.y;
+
+        if (ballIsMovingDown && ballWasAbovePaddle && isBallCollidingWithPaddle(this.ball, this.paddle)) {
             this.ball.bounceFromPaddle(this.paddle);
         }
     }
@@ -116,7 +118,7 @@ export default class Game {
         this.updateLives();
         if (this.lives <= 0) {
             this.state = "gameOver";
-            this.updateStatus();
+            this.updateStatus("Thua");
             return;
         }
         this.ball.reset();

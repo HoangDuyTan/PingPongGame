@@ -32,4 +32,7 @@ gameStatus.textContent = "Đang chơi";
 
 const game = new Game(canvas, selectedLevel, ui);
 restartButton.addEventListener("click", () => {game.restart()})
+requestAnimationFrame(() => {
+   canvas.scrollIntoView({behavior: "auto", block: "center"});
+});
 game.start();

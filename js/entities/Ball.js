@@ -7,18 +7,24 @@ export default class Ball {
         this.y = 0;
         this.vx = 0;
         this.vy = 0;
+        this.preX = 0;
+        this.preY = 0;
         this.reset();
     }
 
     reset() {
         this.x = this.canvas.width / 2;
         this.y = this.canvas.height / 2;
+        this.preX = this.x;
+        this.preY = this.y;
         const angle = Math.PI /4;
         this.vx = this.speed * Math.cos(angle);
         this.vy = -this.speed * Math.sin(angle);
     }
 
     update(deltaTime) {
+        this.preX = this.x;
+        this.preY = this.y;
         this.x += this.vx * deltaTime;
         this.y += this.vy * deltaTime;
         this.checkWallCollision();
@@ -47,7 +53,13 @@ export default class Ball {
         const paddleCenter = paddle.x + paddle.width / 2;
         let relativeHit = (this.x - paddleCenter) / (paddle.width / 2);
         relativeHit = Math.max(-1, Math.min(1, relativeHit));
-        const maxBounceAngle = Math.PI / 3;
+        const paddleMovement = paddle.vx / paddle.speed;
+        const paddleInfluence = 0.25;
+
+        let direction = relativeHit + paddleMovement * paddleInfluence;
+        direction = Math.max(-1, Math.min(1, direction));
+
+        const maxBounceAngle = 65 * Math.PI / 180;
         const bounceAngle = relativeHit * maxBounceAngle;
 
         this.vx = this.speed * Math.sin(bounceAngle);
