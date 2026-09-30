@@ -8,17 +8,22 @@ export default class Target {
         this.variant = variant;
         this.active = true;
 
+        // lv2
         this.startX = x;
         this.moving = options.moving ?? false;
         this.speed = options.speed ?? 0;
         this.moveRange = options.moveRange ?? 0;
         this.direction = options.direction ?? 1;
 
+        // lv4
         this.blinking = options.blinking ?? false;
         this.visibleTime = options.visibleTime ?? 1.5;
         this.hiddenTime = options.hiddenTime ?? 1;
         this.visible = true;
         this.blinkTimer = options.blinkOffset ?? 0;
+
+        // lv7
+        this.type = options.type ?? "normal";
     }
 
     hit() {
@@ -108,6 +113,12 @@ export default class Target {
         // Phần tối dưới đít
         ctx.fillStyle = dark;
         ctx.fillRect(this.x + 4, this.y + this.height - 8, this.width - 8, 4);
+
+        // bomb & trap
+        if (this.type !== "normal") {
+            ctx.fillStyle = this.type === "bomb" ? "#ff3b30" : "#a855f7";
+            ctx.fillRect(this.x + 2, this.y + 2, this.width - 4, this.height - 4);
+        }
 
         ctx.restore();
     }

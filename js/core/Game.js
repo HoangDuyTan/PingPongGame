@@ -29,9 +29,14 @@ export default class Game {
 
         this.input = new Input();
         this.paddle = new Paddle(canvas);
+        this.normalPaddleSpeed = this.paddle.speed;
+        this.trapTimer = 0;
+        this.trapDuration = 5;
+
         this.balls = this.createBalls();
         this.ballRespawnTimer = null;
         this.ballRespawnDelay = 2;
+
         this.targets = this.createTargets();
         this.walls = this.createWalls();
 
@@ -74,8 +79,20 @@ export default class Game {
 
             if (isBallCollidingWithTarget(ball, target)) {
                 target.hit();
-                ball.vy *= -1;
                 this.addScore(target.points);
+
+                // lv7 - bomb
+                if (target.type === "bomb") {
+                    this.explodeBomb(target);
+                }
+
+                // lv7 - trap
+                if (target.type === "trap") {
+                    this.paddle.speed = 150;
+                    this.trapTimer = this.trapDuration;
+                }
+
+                ball.vy *= -1;
                 break;
             }
         }
@@ -118,9 +135,31 @@ export default class Game {
         this.updateScore();
     }
 
+    explodeBomb(bomb) {
+        const config = this.levelManager.getSpecialTargetConfig();
+
+        for (const target of this.targets) {
+            if (!target.active) {
+                continue;
+            }
+
+            const bombX = bomb.x + bomb.width / 2;
+            const bombY = bomb.y + bomb.height / 2;
+            const targetX = target.x + target.width / 2;
+            const targetY = target.y + target.height / 2;
+            const distance = Math.hypot(targetX - bombX, targetY - bombY);
+
+            if (distance <= config.bombRadius) {
+                target.hit();
+                this.addScore(target.points);
+            }
+        }
+    }
+
     createTargets() {
         const targets = [];
         const config = this.levelManager.getTargetConfig();
+        const specialConfig = this.levelManager.getSpecialTargetConfig();
 
         const rows = config.rows;
         const columns = config.columns;
@@ -137,6 +176,18 @@ export default class Game {
             for (let column = 0; column < columns; column++) {
                 const x = startX + column * (targetWidth + gapX);
                 const y = config.startY + row * (targetHeight + gapY);
+                const index = row * columns + column;
+
+                let type = "normal";
+
+                if (specialConfig.bombs.includes(index)) {
+                    type = "bomb";
+                }
+
+                if (specialConfig.traps.includes(index)) {
+                    type = "trap";
+                }
+
                 const target = new Target(x, y, targetWidth, targetHeight, 100, row,
                     {
                         // lv2
@@ -149,7 +200,10 @@ export default class Game {
                         blinking: config.blinking,
                         visibleTime: config.visibleTime,
                         hiddenTime: config.hiddenTime,
-                        blinkOffset: (row * columns + column) * 0.08
+                        blinkOffset: (row * columns + column) * 0.08,
+
+                        // lv7
+                        type,
                     }
                 );
 
@@ -213,6 +267,14 @@ export default class Game {
         }
 
         this.paddle.update(this.input, deltaTime);
+        if (this.trapTimer > 0) {
+            this.trapTimer -= deltaTime;
+
+            if (this.trapTimer <= 0) {
+                this.trapTimer = 0;
+                this.paddle.speed = this.normalPaddleSpeed;
+            }
+        }
 
         for (const target of this.targets) {
             target.update(deltaTime);
@@ -272,6 +334,9 @@ export default class Game {
 
         this.ballRespawnTimer = null;
         this.balls = this.createBalls();
+
+        this.trapTimer = 0;
+        this.paddle.speed = this.normalPaddleSpeed;
     }
 
     checkWinCondition() {
@@ -341,8 +406,12 @@ export default class Game {
         this.state = "playing";
         this.screenButtons = {};
         this.targets = this.createTargets();
+
         this.balls = this.createBalls();
         this.ballRespawnTimer = null;
+
+        this.trapTimer = 0;
+        this.paddle.speed = this.normalPaddleSpeed;
         this.paddle.reset();
         if (this.ui?.pauseButton) {
             this.ui.pauseButton.textContent = "Tạm dừng";

@@ -43,8 +43,8 @@ const LEVEL_OBJECTIVES = {
 
     7: {
         name: "Bomb & Trap",
-        objective: "Tận dụng bom để phá mục tiêu và tránh các bẫy nguy hiểm.",
-        mechanic: "Bom có thể phá nhiều mục tiêu, trong khi bẫy gây bất lợi cho người chơi.",
+        objective: "Tận dụng bom để phá mục tiêu và xoay xở khi dính bẫy.",
+        mechanic: "Bom có thể phá nhiều mục tiêu, trong khi bẫy làm chậm người chơi.",
         tip: "Đưa bóng tới bom khi có nhiều mục tiêu xung quanh nhưng tránh các khu vực có bẫy."
     },
 

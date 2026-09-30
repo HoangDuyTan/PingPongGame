@@ -186,7 +186,62 @@ const LEVEL_CONFIGS = {
             visibleTime: 2.5,
             hiddenTime: 1
         }
-    }
+    },
+
+    7: {
+        targets: {
+            rows: 5,
+            columns: 6,
+            width: 70,
+            height: 20,
+            gapX: 60,
+            gapY: 60,
+            startY: 100,
+
+            moving: true,
+            speed: 100,
+            moveRange: 80,
+
+            blinking: false
+        },
+
+        walls: [
+            {
+                x: 220,
+                y: 200,
+                width: 25,
+                height: 150
+            },
+            {
+                x: 655,
+                y: 200,
+                width: 25,
+                height: 150
+            },
+            {
+                x: 370,
+                y: 115,
+                width: 160,
+                height: 22
+            },
+            {
+                x: 370,
+                y: 415,
+                width: 160,
+                height: 22
+            }
+        ],
+
+        balls: {
+            count: 1
+        },
+
+        specialTargets: {
+            bombs: [2, 14, 22],
+            traps: [8, 17, 20, 23, 2, 11, 48],
+            bombRadius: 130
+        }
+    },
 };
 
 export default class LevelManager {
@@ -208,5 +263,13 @@ export default class LevelManager {
 
     getBallConfig() {
         return this.getConfig().balls || {count: 1};
+    }
+
+    getSpecialTargetConfig() {
+        return this.getConfig().specialTargets || {
+            bombs: [],
+            traps: [],
+            bombRadius: 0
+        };
     }
 }
