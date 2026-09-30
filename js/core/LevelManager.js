@@ -11,8 +11,12 @@ const LEVEL_CONFIGS = {
 
             moving: false,
             speed: 0,
-            moveRange: 0
-        }
+            moveRange: 0,
+
+            blinking: false,
+        },
+
+        walls: []
     },
 
     2: {
@@ -27,8 +31,12 @@ const LEVEL_CONFIGS = {
 
             moving: true,
             speed: 70,
-            moveRange: 45
-        }
+            moveRange: 45,
+
+            blinking: false,
+        },
+
+        walls: []
     },
 
     3: {
@@ -43,7 +51,9 @@ const LEVEL_CONFIGS = {
 
             moving: true,
             speed: 90,
-            moveRange: 90
+            moveRange: 90,
+
+            blinking: false,
         },
 
         walls: [
@@ -70,6 +80,41 @@ const LEVEL_CONFIGS = {
         ]
     },
 
+    4: {
+        targets: {
+            rows: 5,
+            columns: 3,
+            width: 80,
+            height: 20,
+            gapX: 200,
+            gapY: 80,
+            startY: 70,
+
+            moving: true,
+            speed: 30,
+            moveRange: 30,
+
+            blinking: true,
+            visibleTime: 4,
+            hiddenTime: 2
+        },
+
+        walls: [
+            {
+                x: 200,
+                y: 430,
+                width: 125,
+                height: 25
+            },
+
+            {
+                x: 655,
+                y: 430,
+                width: 125,
+                height: 25
+            },
+        ]
+    }
 };
 
 export default class LevelManager {

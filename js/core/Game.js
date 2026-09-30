@@ -137,10 +137,17 @@ export default class Game {
                 const y = config.startY + row * (targetHeight + gapY);
                 const target = new Target(x, y, targetWidth, targetHeight, 100, row,
                     {
+                        // lv2
                         moving: config.moving,
                         speed: config.speed,
                         moveRange: config.moveRange,
-                        direction
+                        direction,
+
+                        // lv4
+                        blinking: config.blinking,
+                        visibleTime: config.visibleTime,
+                        hiddenTime: config.hiddenTime,
+                        blinkOffset: (row * columns + column) * 0.08
                     }
                 );
 

@@ -7,11 +7,18 @@ export default class Target {
         this.points = points;
         this.variant = variant;
         this.active = true;
+
         this.startX = x;
         this.moving = options.moving ?? false;
         this.speed = options.speed ?? 0;
         this.moveRange = options.moveRange ?? 0;
         this.direction = options.direction ?? 1;
+
+        this.blinking = options.blinking ?? false;
+        this.visibleTime = options.visibleTime ?? 1.5;
+        this.hiddenTime = options.hiddenTime ?? 1;
+        this.visible = true;
+        this.blinkTimer = options.blinkOffset ?? 0;
     }
 
     hit() {
@@ -41,28 +48,42 @@ export default class Target {
     }
 
     update(deltaTime) {
-        if (!this.active || !this.moving) {
+        if (!this.active) {
             return;
         }
 
-        this.x += this.speed * this.direction * deltaTime;
+        // Level 2
+        if (this.moving) {
+            this.x += this.speed * this.direction * deltaTime;
 
-        const minX = this.startX - this.moveRange;
-        const maxX = this.startX + this.moveRange;
+            const minX = this.startX - this.moveRange;
+            const maxX = this.startX + this.moveRange;
 
-        if (this.x <= minX) {
-            this.x = minX;
-            this.direction = 1;
+            if (this.x <= minX) {
+                this.x = minX;
+                this.direction = 1;
+            }
+
+            if (this.x >= maxX) {
+                this.x = maxX;
+                this.direction = -1;
+            }
         }
 
-        if (this.x >= maxX) {
-            this.x = maxX;
-            this.direction = -1;
+        // Level 4
+        if (this.blinking) {
+            this.blinkTimer += deltaTime;
+            const duration = this.visible ? this.visibleTime : this.hiddenTime;
+
+            if (this.blinkTimer >= duration) {
+                this.blinkTimer -= duration;
+                this.visible = !this.visible;
+            }
         }
     }
 
     draw(ctx) {
-        if (!this.active) {
+        if (!this.active || !this.visible) {
             return;
         }
 
