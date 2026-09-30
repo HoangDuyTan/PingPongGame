@@ -5,6 +5,7 @@ import Ball from "../entities/Ball.js";
 import Target from "../entities/Target.js";
 
 import {isBallCollidingWithPaddle, isBallCollidingWithTarget} from "./Collision.js";
+import {getLevelObjective} from "../levels/Objectives.js";
 
 export default class Game {
     constructor(canvas, level, ui) {
@@ -12,6 +13,7 @@ export default class Game {
         this.ctx = canvas.getContext("2d");
 
         this.level = level;
+        this.objective = getLevelObjective(this.level);
         this.state = "ready";
         this.score = 0;
         this.lives = 3;
@@ -33,10 +35,19 @@ export default class Game {
     }
 
     start() {
-        this.state = "playing";
-        this.updateUI()
+        this.state = "objective";
+        this.updateStatus("Xem mục tiêu");
         this.lastTime = performance.now();
         this.animationFrameId = requestAnimationFrame(this.gameLoop);
+    }
+
+    beginLevel() {
+        if (this.state !== "objective") {
+            return;
+        }
+
+        this.state = "playing";
+        this.updateStatus("Đang chơi");
     }
 
     handleCollisions() {
@@ -173,7 +184,13 @@ export default class Game {
         this.paddle.draw(this.ctx);
         this.ball.draw(this.ctx);
 
-        if (this.state === "paused" || this.state === "won" || this.state === "gameOver") {
+        const screenStates = [
+            "objective",
+            "paused",
+            "won",
+            "gameOver",
+        ];
+        if (screenStates.includes(this.state)) {
             this.drawScreen(this.state);
         }
     }
@@ -219,47 +236,179 @@ export default class Game {
 
     drawScreen(state) {
         const screens = {
+            objective: {
+                title: `LEVEL ${this.level}`,
+                subtitle: this.objective.name.toUpperCase(),
+                color: "#38bdf8",
+                height: 500,
+
+                sections: [
+                    {
+                        label: "MỤC TIÊU",
+                        text: this.objective.objective,
+                        color: "#fbbf24"
+                    },
+                    {
+                        label: "CƠ CHẾ",
+                        text: this.objective.mechanic,
+                        color: "#a78bfa"
+                    },
+                    {
+                        label: "GỢI Ý",
+                        text: this.objective.tip,
+                        color: "#22d3ee"
+                    }
+                ],
+
+                hint: "ENTER / CLICK ĐỂ BẮT ĐẦU"
+            },
+
             paused: {
                 title: "TẠM DỪNG",
-                message: "Nhấn 'Tiếp tục' hoặc ESC để chơi tiếp",
-                titleColor: "#fbbf24"
+                subtitle: "",
+                color: "#fbbf24",
+                height: 230,
+
+                sections: [
+                    {
+                        label: "",
+                        text: "Nhấn Tiếp tục hoặc Space để chơi tiếp",
+                        color: "#ffffff"
+                    }
+                ],
+
+                hint: ""
             },
 
             won: {
                 title: "BẠN THẮNG!",
-                message: "Nhấn 'Chơi lại' để chơi lại",
-                titleColor: "#22c55e"
+                subtitle: "",
+                color: "#22c55e",
+                height: 230,
+
+                sections: [
+                    {
+                        label: "",
+                        text: "Bạn đã hoàn thành toàn bộ mục tiêu.",
+                        color: "#ffffff"
+                    }
+                ],
+
+                hint: "Nhấn Chơi lại để chơi lại"
             },
 
             gameOver: {
                 title: "GAME OVER",
-                message: "Nhấn 'Chơi lại' để thử lại",
-                titleColor: "#ef4444"
+                subtitle: "",
+                color: "#ef4444",
+                height: 230,
+
+                sections: [
+                    {
+                        label: "",
+                        text: "Bạn đã hết mạng.",
+                        color: "#ffffff"
+                    }
+                ],
+
+                hint: "Nhấn Chơi lại để thử lại"
             }
         };
 
         const screen = screens[state];
+
         if (!screen) {
             return;
         }
 
+        const centerX = this.canvas.width / 2;
+        const centerY = this.canvas.height / 2;
+        const panelWidth = 660;
+        const panelHeight = screen.height;
+        const panelX = centerX - panelWidth / 2;
+        const panelY = centerY - panelHeight / 2;
         this.ctx.save();
 
         // Overlay
         this.ctx.fillStyle = "rgba(0, 0, 0, 0.72)";
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
+        // Panel
+        this.ctx.fillStyle = "rgba(8, 17, 31, 0.95)";
+        this.ctx.fillRect(panelX, panelY, panelWidth, panelHeight);
+
+        // Border
+        this.ctx.strokeStyle = screen.color;
+        this.ctx.lineWidth = 3;
+        this.ctx.strokeRect(panelX, panelY, panelWidth, panelHeight);
         this.ctx.textAlign = "center";
         this.ctx.textBaseline = "middle";
-        this.ctx.fillStyle = screen.titleColor;
-        this.ctx.font = "bold 48px Arial";
-        this.ctx.fillText(screen.title, this.canvas.width / 2, this.canvas.height / 2 - 25);
 
-        this.ctx.fillStyle = "#ffffff";
-        this.ctx.font = "20px Arial";
-        this.ctx.fillText(screen.message, this.canvas.width / 2, this.canvas.height / 2 + 35);
+        // Tiêu đề
+        this.ctx.fillStyle = screen.color;
+        this.ctx.font = "bold 38px monospace";
+        this.ctx.fillText(screen.title, centerX, panelY + 50);
+        let currentY = panelY + 95;
+
+        // Phụ đề
+        if (screen.subtitle) {
+            this.ctx.fillStyle = "#ffffff";
+            this.ctx.font = "bold 22px monospace";
+            this.ctx.fillText(screen.subtitle, centerX, currentY);
+            currentY += 45;
+        }
+
+        // Sections
+        for (const section of screen.sections) {
+            if (section.label) {
+                this.ctx.fillStyle = section.color;
+                this.ctx.font = "bold 15px monospace";
+                this.ctx.fillText(section.label, centerX, currentY);
+                currentY += 28;
+            }
+
+            this.ctx.fillStyle = section.label ? "#e2e8f0" : section.color;
+            this.ctx.font = "16px Arial";
+            const lineCount = this.drawWrappedText(section.text, centerX, currentY, 540, 22);
+            currentY += lineCount * 22 + 28;
+        }
+
+        // Mẹo
+        if (screen.hint) {
+            this.ctx.fillStyle = "#22c55e";
+            this.ctx.font = "bold 14px monospace";
+            this.ctx.fillText(screen.hint, centerX, panelY + panelHeight - 28);
+        }
 
         this.ctx.restore();
+    }
+
+    drawWrappedText(text, x, y, maxWidth, lineHeight) {
+        const words = text.split(" ");
+        let line = "";
+        const lines = [];
+
+        for (const word of words) {
+            const testLine = line ? `${line} ${word}` : word;
+            const testWidth = this.ctx.measureText(testLine).width;
+
+            if (testWidth > maxWidth && line !== "") {
+                lines.push(line);
+                line = word;
+            } else {
+                line = testLine;
+            }
+        }
+
+        if (line) {
+            lines.push(line);
+        }
+
+        lines.forEach((currentLine, index) => {
+            this.ctx.fillText(currentLine, x, y + index * lineHeight);
+        });
+
+        return lines.length;
     }
 
     drawLevelText() {

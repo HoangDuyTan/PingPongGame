@@ -34,16 +34,24 @@ gameStatus.textContent = "Đang chơi";
 
 //-----
 const game = new Game(canvas, selectedLevel, ui);
+canvas.addEventListener("click", () => {game.beginLevel();});
 restartButton.addEventListener("click", () => {game.restart()})
 pauseButton.addEventListener("click", () => {game.togglePause();});
 
 window.addEventListener("keydown", event => {
-    if (event.code === "Space") {
+    if (event.code === "Enter" && !event.repeat) {
+        event.preventDefault();
+        game.beginLevel();
+        return;
+    }
+
+    if (event.code === "Space" && !event.repeat) {
+        event.preventDefault();
         game.togglePause();
     }
 });
 
 requestAnimationFrame(() => {
    canvas.scrollIntoView({behavior: "auto", block: "center"});
+   game.start();
 });
-game.start();
