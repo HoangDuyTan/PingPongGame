@@ -6,6 +6,8 @@ import Target from "../entities/Target.js";
 import Wall from "../entities/Wall.js";
 import Portal from "../entities/Portal.js";
 import GravityZone from "../entities/GravityZone.js";
+import Boss from "../entities/Boss.js";
+import BossProjectile from "../entities/BossProjectile.js";
 
 import {getBallRectangleCollisionSide, isBallCollidingWithPaddle, isBallCollidingWithTarget} from "./Collision.js";
 import {getLevelObjective} from "../levels/Objectives.js";
@@ -43,6 +45,10 @@ export default class Game {
         this.walls = this.createWalls();
         this.portals = this.createPortals();
         this.gravityZones = this.createGravityZones();
+
+        this.boss = this.createBoss();
+        this.bossProjectiles = [];
+        this.playerHitCooldown = 0;
 
         this.lastTime = 0;
         this.animationFrameId = null;
@@ -99,6 +105,14 @@ export default class Game {
     }
 
     checkWinCondition() {
+        if (this.boss) {
+            if (this.boss.hp <= 0) {
+                this.state = "won";
+                this.updateStatus("Bạn đã đánh bại Boss!");
+            }
+            return;
+        }
+
         const allTargetDestroyed = this.targets.every(target => !target.active);
         if (allTargetDestroyed) {
             this.state = "won";
@@ -208,6 +222,17 @@ export default class Game {
         });
     }
 
+    createBoss() {
+        const config = this.levelManager.getBossConfig();
+
+        if (!config) {
+            return null;
+        }
+
+        return new Boss(this.canvas, config);
+    }
+
+
     createBalls() {
         const config = this.levelManager.getBallConfig();
         const balls = [];
@@ -251,6 +276,21 @@ export default class Game {
             target.update(deltaTime);
         }
 
+        if (this.boss) {
+            const attacks = this.boss.update(deltaTime, this.paddle);
+            for (const attack of attacks) {
+                this.bossProjectiles.push(new BossProjectile(attack.x, attack.y, attack.vx, attack.vy));
+            }
+        }
+
+        for (const projectile of this.bossProjectiles) {
+            projectile.update(deltaTime);
+        }
+
+        if (this.playerHitCooldown > 0) {
+            this.playerHitCooldown -= deltaTime;
+        }
+
         for (const ball of this.balls) {
             ball.update(deltaTime);
 
@@ -262,8 +302,12 @@ export default class Game {
             this.handleWallCollisions(ball);
             this.handlePortalCollisions(ball);
             this.handleGravityZones(ball, deltaTime);
+            this.handleBossCollision(ball)
             this.handleTargetCollisions(ball);
         }
+
+        this.handleBossProjectiles();
+        this.bossProjectiles = this.bossProjectiles.filter(projectile => !projectile.isOutOfCanvas(this.canvas));
 
         const hasLostBall = this.balls.some(ball => ball.isOutOfBottom());
         if (hasLostBall) {
@@ -346,6 +390,13 @@ export default class Game {
             target.draw(this.ctx);
         }
 
+        if (this.boss) {
+            this.boss.draw(this.ctx);
+        }
+        for (const projectile of this.bossProjectiles) {
+            projectile.draw(this.ctx);
+        }
+
         this.paddle.draw(this.ctx);
         for (const ball of this.balls) {
             ball.draw(this.ctx);
@@ -363,6 +414,10 @@ export default class Game {
         this.state = "playing";
         this.screenButtons = {};
         this.targets = this.createTargets();
+
+        this.boss = this.createBoss();
+        this.bossProjectiles = [];
+        this.playerHitCooldown = 0;
 
         this.balls = this.createBalls();
         this.ballRespawnTimer = null;
@@ -468,6 +523,66 @@ export default class Game {
             }
 
             break;
+        }
+    }
+
+    handleBossCollision(ball) {
+        if (!this.boss || this.boss.hp <= 0) {
+            return;
+        }
+
+        const side = getBallRectangleCollisionSide(ball, this.boss);
+
+        if (!side) {
+            return;
+        }
+
+        this.boss.takeDamage(this.boss.damagePerHit);
+
+        if (side === "bottom") {
+            ball.y = this.boss.y + this.boss.height + ball.radius;
+            ball.vy = Math.abs(ball.vy);
+        }
+
+        if (side === "top") {
+            ball.y = this.boss.y - ball.radius;
+            ball.vy = -Math.abs(ball.vy);
+        }
+
+        if (side === "left") {
+            ball.x = this.boss.x - ball.radius;
+            ball.vx = -Math.abs(ball.vx);
+        }
+
+        if (side === "right") {
+            ball.x = this.boss.x + this.boss.width + ball.radius;
+            ball.vx = Math.abs(ball.vx);
+        }
+    }
+
+    handleBossProjectiles() {
+        if (this.playerHitCooldown > 0) {
+            return;
+        }
+
+        for (let i = this.bossProjectiles.length - 1; i >= 0; i--) {
+            const projectile = this.bossProjectiles[i];
+
+            if (!projectile.hitsPaddle(this.paddle)) {
+                continue;
+            }
+
+            this.bossProjectiles.splice(i, 1);
+            this.lives--;
+            this.updateLives();
+            this.playerHitCooldown = 1;
+
+            if (this.lives <= 0) {
+                this.state = "gameOver";
+                this.updateStatus("Boss đã đánh bại bạn!");
+            }
+
+            return;
         }
     }
 
@@ -610,7 +725,7 @@ export default class Game {
                     label: "", text: "Bạn đã hết mạng.", color: "#ffffff"
                 }],
 
-                hint: "Nhấn Chơi lại để thử lại"
+                hint: "Nhấn 'Chơi lại' hoặc 'F5' để thử lại"
             }
         };
 

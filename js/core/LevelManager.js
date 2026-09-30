@@ -364,7 +364,69 @@ const LEVEL_CONFIGS = {
                     forceY: 0
                 }
             ]
-        }
+        },
+
+        10: {
+            targets: {
+                rows: 0,
+                columns: 1,
+                width: 70,
+                height: 20,
+                gapX: 0,
+                gapY: 0,
+                startY: 70,
+
+                moving: false,
+                speed: 0,
+                moveRange: 0,
+
+                blinking: false
+            },
+
+            walls: [],
+
+            balls: {
+                count: 2
+            },
+
+            portals: [
+                {
+                    x: 200,
+                    y: 100,
+                    radius: 30,
+                    color: "#22d3ee"
+                },
+                {
+                    x: 750,
+                    y: 350,
+                    radius: 40,
+                    color: "#a855f7"
+                },
+            ],
+
+            gravityZones: [
+                {
+                    x: 100,
+                    y: 170,
+                    width: 280,
+                    height: 300,
+                    forceX: 140,
+                    forceY: 0
+                },
+            ],
+
+            boss: {
+                width: 180,
+                height: 90,
+                y: 75,
+
+                hp: 350,
+                speed: 100,
+                damagePerHit: 25,
+                shotInterval: 1.5,
+                spreadInterval: 5
+            }
+        },
     }
 ;
 
@@ -403,5 +465,9 @@ export default class LevelManager {
 
     getGravityZoneConfig() {
         return this.getConfig().gravityZones || [];
+    }
+
+    getBossConfig() {
+        return this.getConfig().boss || null;
     }
 }

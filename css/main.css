@@ -3,7 +3,7 @@ body {
     justify-content: center;
     align-items: flex-start;
     padding: var(--space-xl);
-    background-image: url("../assets/images/menu-bg.jpg");
+    background-image: url("../assets/images/menu-bg.png");
 }
 
 .main-menu {
@@ -21,16 +21,17 @@ body {
 }
 
 .game-header h1 {
-    font-size: 50px;
+    font-size: 80px;
     font-weight: 1000;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
 }
 
 .game-label {
-    display: inline-block;
+    display: flex;
     margin-bottom: var(--space-sm);
     color: var(--color-accent);
-    font-size: var(--font-size-sm);
-    font-weight: 700;
     letter-spacing: 2px;
 }
 
