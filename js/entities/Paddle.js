@@ -33,4 +33,8 @@ export default class Paddle {
         ctx.fillRect(this.x, this.y, this.width, this.height);
         ctx.restore();
     }
+
+    reset() {
+        this.x = (this.canvas.width - this.width) / 2;
+    }
 }

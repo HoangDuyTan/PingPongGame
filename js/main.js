@@ -3,8 +3,13 @@ import Game from "./core/Game.js"
 const canvas = document.getElementById("gameCanvas");
 const levelNumber = document.getElementById("levelNumber");
 const  gameStatus = document.getElementById("gameStatus");
+const livesElement = document.getElementById("lives");
+const restartButton = document.getElementById("restartButton");
 const scoreElement = document.getElementById("score");
-const ui = {score: scoreElement}
+const ui = {
+    score: scoreElement,
+    lives: livesElement,
+    status: gameStatus,}
 
 function getSelectedLevel() {
     const param = new URLSearchParams(window.location.search);
@@ -26,4 +31,5 @@ levelNumber.textContent = selectedLevel;
 gameStatus.textContent = "Đang chơi";
 
 const game = new Game(canvas, selectedLevel, ui);
+restartButton.addEventListener("click", () => {game.restart()})
 game.start();

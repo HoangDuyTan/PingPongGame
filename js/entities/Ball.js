@@ -22,10 +22,6 @@ export default class Ball {
         this.x += this.vx * deltaTime;
         this.y += this.vy * deltaTime;
         this.checkWallCollision();
-
-        if (this.isOutOfBottom()) {
-            this.reset();
-        }
     }
 
     checkWallCollision() {
