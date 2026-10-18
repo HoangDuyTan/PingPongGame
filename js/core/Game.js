@@ -58,7 +58,6 @@ export default class Game {
 
     start() {
         this.state = "objective";
-        this.updateStatus("Xem mục tiêu");
         this.lastTime = performance.now();
         this.animationFrameId = requestAnimationFrame(this.gameLoop);
     }
@@ -69,7 +68,6 @@ export default class Game {
         }
 
         this.state = "playing";
-        this.updateStatus("Đang chơi");
     }
 
     addScore(points) {
@@ -93,7 +91,6 @@ export default class Game {
         this.updateLives();
         if (this.lives <= 0) {
             this.state = "gameOver";
-            this.updateStatus("Thua");
             return;
         }
 
@@ -108,7 +105,6 @@ export default class Game {
         if (this.boss) {
             if (this.boss.hp <= 0) {
                 this.state = "won";
-                this.updateStatus("Bạn đã đánh bại Boss!");
             }
             return;
         }
@@ -116,7 +112,6 @@ export default class Game {
         const allTargetDestroyed = this.targets.every(target => !target.active);
         if (allTargetDestroyed) {
             this.state = "won";
-            this.updateStatus("Bạn đã chiến thắng!");
         }
     }
 
@@ -355,16 +350,9 @@ export default class Game {
         }
     }
 
-    updateStatus(text) {
-        if (this.ui?.status) {
-            this.ui.status.textContent = text;
-        }
-    }
-
     updateUI() {
         this.updateScore();
         this.updateLives();
-        this.updateStatus("Đang chơi");
     }
 
     render() {
@@ -435,7 +423,6 @@ export default class Game {
 
         if (this.state === "playing") {
             this.state = "paused";
-            this.updateStatus("Tạm dừng");
 
             if (this.ui?.pauseButton) {
                 this.ui.pauseButton.textContent = "Tiếp tục";
@@ -446,7 +433,6 @@ export default class Game {
 
         if (this.state === "paused") {
             this.state = "playing";
-            this.updateStatus("Đang chơi");
 
             if (this.ui?.pauseButton) {
                 this.ui.pauseButton.textContent = "Tạm dừng";
@@ -560,7 +546,6 @@ export default class Game {
 
             if (this.lives <= 0) {
                 this.state = "gameOver";
-                this.updateStatus("Boss đã đánh bại bạn!");
             }
 
             return;

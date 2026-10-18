@@ -2,7 +2,6 @@ import Game from "./core/Game.js";
 
 const canvas = document.getElementById("gameCanvas");
 const levelNumber = document.getElementById("levelNumber");
-const gameStatus = document.getElementById("gameStatus");
 const livesElement = document.getElementById("lives");
 const restartButton = document.getElementById("restartButton");
 const pauseButton = document.getElementById("pauseButton");
@@ -13,7 +12,6 @@ const gameInfo = document.querySelector(".game-info");
 const ui = {
     score: scoreElement,
     lives: livesElement,
-    status: gameStatus,
     pauseButton: pauseButton
 };
 
@@ -53,7 +51,6 @@ if (!canvas) {
 
 const selectedLevel = getSelectedLevel();
 levelNumber.textContent = selectedLevel;
-gameStatus.textContent = "Đang chơi";
 
 const game = new Game(canvas, selectedLevel, ui);
 
