@@ -1,10 +1,10 @@
 function isBallCollidingWithRectangle(ball, rectangle) {
-    const nearestX = Math.max(rectangle.x, Math.min(ball.x, rectangle.x + rectangle.width));
-    const nearestY = Math.max(rectangle.y, Math.min(ball.y, rectangle.y + rectangle.height));
-    const dx = ball.x - nearestX;
-    const dy = ball.y - nearestY;
-
-    return (dx * dx + dy * dy <= ball.radius * ball.radius);
+    return (
+        ball.x + ball.radius >= rectangle.x &&
+        ball.x - ball.radius <= rectangle.x + rectangle.width &&
+        ball.y + ball.radius >= rectangle.y &&
+        ball.y - ball.radius <= rectangle.y + rectangle.height
+    );
 }
 
 export function isBallCollidingWithPaddle(ball, paddle) {

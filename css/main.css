@@ -1,84 +1,74 @@
 body {
     display: flex;
     justify-content: center;
-    align-items: flex-start;
-    padding: var(--space-xl);
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
     background-image: url("../assets/images/menu-bg.png");
+    background-size: cover;
+    background-position: center;
 }
 
 .main-menu {
-    width: 100%;
+    width: 95vw;
     max-width: 1000px;
-    padding: var(--space-xl);
+    padding: 25px;
     background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-md);
+    border: 2px solid var(--color-border);
+    border-radius: 10px;
 }
 
 .game-header {
-    margin: var(--space-xl);
+    margin-bottom: 22px;
 }
 
 .game-header h1 {
-    font-size: 80px;
-    font-weight: 1000;
+    font-size: 64px;
+    font-weight: bold;
     text-align: center;
-    align-items: center;
-    justify-content: center;
 }
 
 .game-label {
-    display: flex;
-    margin-bottom: var(--space-sm);
     color: var(--color-accent);
     letter-spacing: 2px;
 }
 
 .level-selection {
-    margin-bottom: var(--space-xl);
+    margin-bottom: 25px;
 }
 
 .section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--space-lg);
+    margin-bottom: 15px;
 }
 
 .section-header h2 {
-    font-size: var(--font-size-xl);
+    font-size: 24px;
 }
 
 .level-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: var(--space-md);
+    gap: 12px;
 }
 
 .level-button {
-    min-height: 120px;
+    min-height: 75px;
     display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: var(--space-md);
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
     background: var(--color-bg-secondary);
     color: var(--color-text);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
+    border: 2px solid var(--color-border);
+    border-radius: 6px;
     text-decoration: none;
-    transition: var(--transition-fast);
+    font-size: 18px;
+    font-weight: bold;
 }
 
 .level-button:hover {
-    transform: translateY(-5px);
-    transition: var(--transition-fast);
-    border: 1px solid var(--color-primary);
-}
-
-.level-button {
-    font-size: 20px;
-    font-weight: 800;
+    border-color: var(--color-primary);
+    background: var(--color-surface);
 }
 
 .boss-level {
@@ -89,19 +79,17 @@ body {
 .instructions {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    gap: var(--space-lg);
-    padding-top: var(--space-lg);
+    gap: 20px;
+    padding-top: 18px;
     border-top: 1px solid var(--color-border);
 }
 
 .instructions h2 {
-    margin-bottom: var(--space-sm);
-    font-size: var(--font-size-lg);
+    font-size: 20px;
 }
 
 .instructions p {
-    max-width: 500px;
+    max-width: 620px;
     color: var(--color-text-muted);
     line-height: 1.5;
 }

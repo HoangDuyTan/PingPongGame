@@ -238,7 +238,7 @@ const LEVEL_CONFIGS = {
 
             specialTargets: {
                 bombs: [2, 14, 22],
-                traps: [8, 17, 20, 23, 2, 11, 48],
+                traps: [8, 17, 20, 23, 11],
                 bombRadius: 130
             }
         },
@@ -264,7 +264,7 @@ const LEVEL_CONFIGS = {
                 {
                     x: 305,
                     y: 250,
-                    width: 300,
+                    width: 200,
                     height: 25
                 },
             ],
@@ -275,7 +275,7 @@ const LEVEL_CONFIGS = {
 
             specialTargets: {
                 bombs: [2, 14],
-                traps: [8, 20, 11],
+                traps: [8, 20],
                 bombRadius: 130
             },
 
@@ -284,25 +284,25 @@ const LEVEL_CONFIGS = {
                     x: 120,
                     y: 350,
                     radius: 30,
-                    color: "#22d3ee"
+                    color: "cyan"
                 },
                 {
                     x: 780,
                     y: 350,
                     radius: 30,
-                    color: "#a855f7"
+                    color: "purple"
                 },
                 {
-                    x: 680,
+                    x: 700,
                     y: 100,
                     radius: 30,
-                    color: "#a855f7"
+                    color: "purple"
                 },
                 {
                     x: 220,
-                    y: 100,
+                    y: 150,
                     radius: 30,
-                    color: "#22d3ee"
+                    color: "cyan"
                 },
             ]
         },
@@ -335,13 +335,13 @@ const LEVEL_CONFIGS = {
                     x: 780,
                     y: 350,
                     radius: 30,
-                    color: "#a855f7"
+                    color: "purple"
                 },
                 {
                     x: 220,
                     y: 100,
                     radius: 30,
-                    color: "#22d3ee"
+                    color: "cyan"
                 },
             ],
 
@@ -394,13 +394,13 @@ const LEVEL_CONFIGS = {
                     x: 200,
                     y: 100,
                     radius: 30,
-                    color: "#22d3ee"
+                    color: "cyan"
                 },
                 {
                     x: 750,
                     y: 350,
                     radius: 40,
-                    color: "#a855f7"
+                    color: "purple"
                 },
             ],
 

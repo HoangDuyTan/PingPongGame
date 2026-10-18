@@ -20,13 +20,11 @@ export default class GravityZone {
     draw(ctx) {
         ctx.save();
 
-        ctx.fillStyle = "rgba(56, 189, 248, 0.12)";
-        ctx.fillRect(this.x, this.y, this.width, this.height);
-        ctx.strokeStyle = "#38bdf8";
+        ctx.strokeStyle = "cyan";
         ctx.lineWidth = 2;
         ctx.strokeRect(this.x, this.y, this.width, this.height);
 
-        ctx.fillStyle = "#38bdf8";
+        ctx.fillStyle = "cyan";
         ctx.font = "bold 16px monospace";
         ctx.textAlign = "center";
         const arrow = this.forceX > 0 ? ">>>>>" : "<<<<<";

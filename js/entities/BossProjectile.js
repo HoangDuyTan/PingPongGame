@@ -22,23 +22,15 @@ export default class BossProjectile {
     }
 
     isOutOfCanvas(canvas) {
-        return (this.x < -this.radius || this.x > canvas.width + this.radius || this.y > canvas.height + this.radius);
+        return this.x < 0 || this.x > canvas.width || this.y > canvas.height;
     }
 
     draw(ctx) {
         ctx.save();
-
-        ctx.fillStyle = "#ef4444";
+        ctx.fillStyle = "red";
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fill();
-
-        ctx.fillStyle = "#fef08a";
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
-
-        ctx.fill();
-
         ctx.restore();
     }
 }

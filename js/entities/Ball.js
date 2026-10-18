@@ -25,9 +25,8 @@ export default class Ball {
         this.y = this.canvas.height / 2;
         this.preX = this.x;
         this.preY = this.y;
-        const angle = Math.PI /4;
-        this.vx = this.speed * Math.cos(angle);
-        this.vy = -this.speed * Math.sin(angle);
+        this.vx = this.speed * 0.7;
+        this.vy = -this.speed * 0.7;
     }
 
     update(deltaTime) {
@@ -40,10 +39,10 @@ export default class Ball {
         // lv6
         if (this.blinking) {
             this.blinkTimer += deltaTime;
-
             const duration = this.visible ? this.visibleTime : this.hiddenTime;
+
             if (this.blinkTimer >= duration) {
-                this.blinkTimer -= duration;
+                this.blinkTimer = 0;
                 this.visible = !this.visible;
             }
         }
@@ -70,19 +69,23 @@ export default class Ball {
 
     bounceFromPaddle(paddle) {
         const paddleCenter = paddle.x + paddle.width / 2;
-        let relativeHit = (this.x - paddleCenter) / (paddle.width / 2);
-        relativeHit = Math.max(-1, Math.min(1, relativeHit));
-        const paddleMovement = paddle.vx / paddle.speed;
-        const paddleInfluence = 0.25;
+        let direction = (this.x - paddleCenter) / (paddle.width / 2);
 
-        let direction = relativeHit + paddleMovement * paddleInfluence;
-        direction = Math.max(-1, Math.min(1, direction));
+        if (paddle.vx < 0) {
+            direction -= 0.2;
+        } else if (paddle.vx > 0) {
+            direction += 0.2;
+        }
 
-        const maxBounceAngle = 65 * Math.PI / 180;
-        const bounceAngle = relativeHit * maxBounceAngle;
+        if (direction < -1) {
+            direction = -1;
+        }
+        if (direction > 1) {
+            direction = 1;
+        }
 
-        this.vx = this.speed * Math.sin(bounceAngle);
-        this.vy = -this.speed * Math.cos(bounceAngle);
+        this.vx = this.speed * direction;
+        this.vy = -this.speed;
         this.y = paddle.y - this.radius;
     }
 
@@ -97,28 +100,17 @@ export default class Ball {
 
         ctx.save();
 
-        // Bóng
-        ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
-        ctx.beginPath();
-        ctx.arc(this.x + 3, this.y + 3, this.radius, 0, Math.PI * 2);
-        ctx.fill();
-
         // Viền
-        ctx.fillStyle = "#e2e8f0";
+        ctx.fillStyle = "white";
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fill();
 
         // Màu bên trong
-        ctx.fillStyle = "#67e8f9";
+        ctx.fillStyle = "cyan";
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius - 3, 0, Math.PI * 2);
         ctx.fill();
-
-        // highlight
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(this.x - 3, this.y - 5, 3, 3);
-        ctx.fillRect(this.x, this.y - 2, 2, 2);
 
         ctx.restore();
     }

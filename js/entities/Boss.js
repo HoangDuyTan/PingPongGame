@@ -22,7 +22,7 @@ export default class Boss {
     update(deltaTime, paddle) {
         const attacks = [];
         this.rage = this.hp <= this.maxHp / 2;
-        const moveSpeed = this.rage ? this.speed * 1.5 : this.speed;
+        const moveSpeed = this.rage ? this.speed + 50 : this.speed;
 
         this.x += moveSpeed * this.direction * deltaTime;
 
@@ -38,7 +38,7 @@ export default class Boss {
 
         // Skill 1
         this.shotTimer += deltaTime;
-        const currentShotInterval = this.rage ? this.shotInterval * 0.6 : this.shotInterval;
+        const currentShotInterval = this.rage ? 1 : this.shotInterval;
         if (this.shotTimer >= currentShotInterval) {
             this.shotTimer = 0;
             attacks.push(this.createAimShot(paddle));
@@ -58,18 +58,17 @@ export default class Boss {
         const startX = this.x + this.width / 2;
         const startY = this.y + this.height;
         const targetX = paddle.x + paddle.width / 2;
-        const targetY = paddle.y;
-        const dx = targetX - startX;
-        const dy = targetY - startY;
-        const distance = Math.hypot(dx, dy);
-        const speed = this.rage ? 340 : 270;
+        let vx = (targetX - startX) * 0.8;
+        const vy = this.rage ? 340 : 270;
 
-        return {
-            x: startX,
-            y: startY,
-            vx: dx / distance * speed,
-            vy: dy / distance * speed
-        };
+        if (vx < -200) {
+            vx = -200;
+        }
+        if (vx > 200) {
+            vx = 200;
+        }
+
+        return {x: startX, y: startY, vx, vy};
     }
 
     createSpreadShot() {
@@ -78,24 +77,9 @@ export default class Boss {
         const speed = this.rage ? 330 : 270;
 
         return [
-            {
-                x,
-                y,
-                vx: -130,
-                vy: speed
-            },
-            {
-                x,
-                y,
-                vx: 0,
-                vy: speed
-            },
-            {
-                x,
-                y,
-                vx: 130,
-                vy: speed
-            }
+            {x, y, vx: -130, vy: speed},
+            {x, y, vx: 0, vy: speed},
+            {x, y, vx: 130, vy: speed}
         ];
     }
 
@@ -113,48 +97,40 @@ export default class Boss {
 
         ctx.save();
 
-        const coreColor = this.rage ? "#ef4444" : "#22d3ee";
+        const noseColor = this.rage ? "red" : "cyan";
 
-        // Bóng
-        ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
-        ctx.fillRect(this.x + 6, this.y + 6, this.width,this.height);
+        // Tai
+        ctx.fillStyle = "gray";
+        ctx.fillRect(this.x - 15, this.y + 35, 25, 30);
+        ctx.fillRect(this.x + this.width - 10, this.y + 35, 25, 30);
 
-        // Hai khẩu pháo
-        ctx.fillStyle = "#475569";
-        ctx.fillRect(this.x - 18, this.y + 35, 30, 35);
-        ctx.fillRect(this.x + this.width - 12, this.y + 35, 30, 35);
-
-        // Thân
-        ctx.fillStyle = "#1e293b";
+        // Đầu
+        ctx.fillStyle = "darkslategray";
         ctx.fillRect(this.x, this.y, this.width, this.height);
 
-        // Giáp
-        ctx.fillStyle = "#64748b";
-        ctx.fillRect(this.x + 12, this.y + 12, this.width - 24, 20);
-
         // Mắt
-        ctx.fillStyle = "#ef4444";
-        ctx.fillRect(this.x + 40, this.y + 40, 25, 8);
-        ctx.fillRect(this.x + this.width - 65, this.y + 40, 25, 8);
+        ctx.fillStyle = "red";
+        ctx.fillRect(this.x + 40, this.y + 40, 25, 7);
+        ctx.fillRect(this.x + this.width - 65, this.y + 40, 25, 7);
 
-        // lõi
-        ctx.fillStyle = coreColor;
+        // Mũi
+        ctx.fillStyle = noseColor;
         ctx.beginPath();
-        ctx.arc(this.x + this.width / 2, this.y + 58, 17, 0, Math.PI * 2);
+        ctx.arc(this.x + this.width / 2, this.y + 58, 15, 0, Math.PI * 2);
         ctx.fill();
 
-        // Miệng / Hạ bộ
-        ctx.fillStyle = "#0f172a";
-        ctx.fillRect(this.x + 50, this.y + 75, this.width - 100, 8);
+        // Miệng
+        ctx.fillStyle = "black";
+        ctx.fillRect(this.x + 50, this.y + 75, this.width - 100, 7);
 
         // HP
         const hpPercent = this.hp / this.maxHp;
-        ctx.fillStyle = "#111827";
-        ctx.fillRect(this.x, this.y - 22, this.width, 10);
-        ctx.fillStyle = this.rage ? "#ef4444" : "#22c55e";
-        ctx.fillRect(this.x, this.y - 22, this.width * hpPercent, 10);
-        ctx.strokeStyle = "#ffffff";
-        ctx.strokeRect(this.x, this.y - 22, this.width, 10);
+        ctx.fillStyle = "black";
+        ctx.fillRect(this.x, this.y - 20, this.width, 10);
+        ctx.fillStyle = this.rage ? "red" : "limegreen";
+        ctx.fillRect(this.x, this.y - 20, this.width * hpPercent, 10);
+        ctx.strokeStyle = "white";
+        ctx.strokeRect(this.x, this.y - 20, this.width, 10);
 
         ctx.restore();
     }

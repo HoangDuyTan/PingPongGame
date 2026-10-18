@@ -27,41 +27,33 @@ export default class Paddle {
     keepInsideCanvas() {
         if (this.x < 0) {
             this.x = 0;
-            if (this.vx < 0) {
-                this.vx = 0;
-            }
+            this.vx = 0;
         }
 
         if (this.x + this.width > this.canvas.width) {
             this.x = this.canvas.width - this.width;
-            if (this.vx > 0) {
-                this.vx = 0;
-            }
+            this.vx = 0;
         }
     }
 
     draw(ctx) {
         ctx.save();
 
-        // Bóng
-        ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
-        ctx.fillRect(this.x + 4, this.y + 4, this.width, this.height);
-
         // Viền
-        ctx.fillStyle = "#1e3a8a";
+        ctx.fillStyle = "darkblue";
         ctx.fillRect(this.x, this.y, this.width, this.height);
 
         // Thân
-        ctx.fillStyle = "#3b82f6";
+        ctx.fillStyle = "dodgerblue";
         ctx.fillRect(this.x + 2, this.y + 2, this.width - 4, this.height - 4);
 
         // Highlight
-        ctx.fillStyle = "#93c5fd";
-        ctx.fillRect(this.x + 6, this.y + 4, this.width - 12, 4);
+        ctx.fillStyle = "white";
+        ctx.fillRect(this.x + 5, this.y + 3, this.width - 10, 2);
 
         // Bóng dưới đít
-        ctx.fillStyle = "#1d4ed8";
-        ctx.fillRect(this.x + 6, this.y + this.height - 6, this.width - 12, 3);
+        ctx.fillStyle = "blue";
+        ctx.fillRect(this.x + 5, this.y + this.height - 4, this.width - 10, 2);
 
         ctx.restore();
     }

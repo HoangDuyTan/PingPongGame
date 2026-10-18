@@ -164,7 +164,6 @@ export default class Game {
                     blinking: config.blinking,
                     visibleTime: config.visibleTime,
                     hiddenTime: config.hiddenTime,
-                    blinkOffset: (row * columns + column) * 0.08,
 
                     // lv7
                     type,
@@ -189,9 +188,10 @@ export default class Game {
             const bombY = bomb.y + bomb.height / 2;
             const targetX = target.x + target.width / 2;
             const targetY = target.y + target.height / 2;
-            const distance = Math.hypot(targetX - bombX, targetY - bombY);
+            const nearX = Math.abs(targetX - bombX) <= config.bombRadius;
+            const nearY = Math.abs(targetY - bombY) <= config.bombRadius;
 
-            if (distance <= config.bombRadius) {
+            if (nearX && nearY) {
                 target.hit();
                 this.addScore(target.points);
             }
@@ -243,11 +243,9 @@ export default class Game {
             });
 
             if (config.count > 1) {
-                const angle = 70 * Math.PI / 180;
                 const direction = i % 2 === 0 ? -1 : 1;
-
-                ball.vx = direction * ball.speed * Math.cos(angle);
-                ball.vy = -ball.speed * Math.sin(angle);
+                ball.vx = direction * ball.speed * 0.5;
+                ball.vy = -ball.speed * 0.8;
             }
 
             balls.push(ball);
@@ -302,7 +300,7 @@ export default class Game {
             this.handleWallCollisions(ball);
             this.handlePortalCollisions(ball);
             this.handleGravityZones(ball, deltaTime);
-            this.handleBossCollision(ball)
+            this.handleBossCollision(ball);
             this.handleTargetCollisions(ball);
         }
 
@@ -321,15 +319,15 @@ export default class Game {
                 const ballConfig = this.levelManager.getBallConfig();
 
                 while (this.balls.length < ballConfig.count) {
-                    const newBall = new Ball(this.canvas);
+                    const newBall = new Ball(this.canvas, ballConfig);
                     newBall.x = this.paddle.x + this.paddle.width / 2;
                     newBall.y = this.paddle.y - newBall.radius - 5;
                     newBall.preX = newBall.x;
                     newBall.preY = newBall.y;
 
                     const otherBall = this.balls[0];
-                    newBall.vx = -Math.sign(otherBall.vx) * Math.abs(newBall.vx);
-                    newBall.vy = -Math.abs(newBall.vy);
+                    newBall.vx = otherBall.vx > 0 ? -150 : 150;
+                    newBall.vy = -250;
 
                     this.balls.push(newBall);
                 }
@@ -372,7 +370,6 @@ export default class Game {
     render() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.drawBackground();
-        this.drawLevelText();
 
         for (const zone of this.gravityZones) {
             zone.draw(this.ctx);
@@ -502,27 +499,30 @@ export default class Game {
                 continue;
             }
 
-            if (side === "top") {
-                ball.y = wall.y - ball.radius;
-                ball.vy = -Math.abs(ball.vy);
-            }
-
-            if (side === "bottom") {
-                ball.y = wall.y + wall.height + ball.radius;
-                ball.vy = Math.abs(ball.vy);
-            }
-
-            if (side === "left") {
-                ball.x = wall.x - ball.radius;
-                ball.vx = -Math.abs(ball.vx);
-            }
-
-            if (side === "right") {
-                ball.x = wall.x + wall.width + ball.radius;
-                ball.vx = Math.abs(ball.vx);
-            }
-
+            this.bounceBall(ball, wall, side);
             break;
+        }
+    }
+
+    bounceBall(ball, rectangle, side) {
+        if (side === "top") {
+            ball.y = rectangle.y - ball.radius;
+            ball.vy = -Math.abs(ball.vy);
+        }
+
+        if (side === "bottom") {
+            ball.y = rectangle.y + rectangle.height + ball.radius;
+            ball.vy = Math.abs(ball.vy);
+        }
+
+        if (side === "left") {
+            ball.x = rectangle.x - ball.radius;
+            ball.vx = -Math.abs(ball.vx);
+        }
+
+        if (side === "right") {
+            ball.x = rectangle.x + rectangle.width + ball.radius;
+            ball.vx = Math.abs(ball.vx);
         }
     }
 
@@ -538,26 +538,7 @@ export default class Game {
         }
 
         this.boss.takeDamage(this.boss.damagePerHit);
-
-        if (side === "bottom") {
-            ball.y = this.boss.y + this.boss.height + ball.radius;
-            ball.vy = Math.abs(ball.vy);
-        }
-
-        if (side === "top") {
-            ball.y = this.boss.y - ball.radius;
-            ball.vy = -Math.abs(ball.vy);
-        }
-
-        if (side === "left") {
-            ball.x = this.boss.x - ball.radius;
-            ball.vx = -Math.abs(ball.vx);
-        }
-
-        if (side === "right") {
-            ball.x = this.boss.x + this.boss.width + ball.radius;
-            ball.vx = Math.abs(ball.vx);
-        }
+        this.bounceBall(ball, this.boss, side);
     }
 
     handleBossProjectiles() {
@@ -635,13 +616,15 @@ export default class Game {
                 continue;
             }
 
-            const distanceA = Math.hypot(ball.x - portalA.x, ball.y - portalA.y);
-            const distanceB = Math.hypot(ball.x - portalB.x, ball.y - portalB.y);
+            const rangeA = ball.radius + portalA.radius;
+            const rangeB = ball.radius + portalB.radius;
+            const insideA = Math.abs(ball.x - portalA.x) <= rangeA && Math.abs(ball.y - portalA.y) <= rangeA;
+            const insideB = Math.abs(ball.x - portalB.x) <= rangeB && Math.abs(ball.y - portalB.y) <= rangeB;
 
             let exitPortal = null;
-            if (distanceA <= ball.radius + portalA.radius) {
+            if (insideA) {
                 exitPortal = portalB;
-            } else if (distanceB <= ball.radius + portalB.radius) {
+            } else if (insideB) {
                 exitPortal = portalA;
             }
 
@@ -669,129 +652,121 @@ export default class Game {
             ball.vy += zone.forceY * deltaTime;
 
             const maxSpeed = 420;
-            const currentSpeed = Math.hypot(ball.vx, ball.vy);
 
-            if (currentSpeed > maxSpeed) {
-                ball.vx = ball.vx / currentSpeed * maxSpeed;
-                ball.vy = ball.vy / currentSpeed * maxSpeed;
+            if (ball.vx > maxSpeed) {
+                ball.vx = maxSpeed;
+            }
+            if (ball.vx < -maxSpeed) {
+                ball.vx = -maxSpeed;
+            }
+            if (ball.vy > maxSpeed) {
+                ball.vy = maxSpeed;
+            }
+            if (ball.vy < -maxSpeed) {
+                ball.vy = -maxSpeed;
             }
         }
     }
 
     // DRAW
     drawScreen(state) {
-        const screens = {
-            objective: {
-                title: `LEVEL ${this.level}`,
-                subtitle: this.objective.name.toUpperCase(),
-                color: "#38bdf8",
-                height: 500,
+        let title = "";
+        let subtitle = "";
+        let color = "white";
+        let text = "";
+        let panelHeight = 230;
 
-                sections: [{
-                    label: "MỤC TIÊU", text: this.objective.objective, color: "#fbbf24"
-                }, {
-                    label: "CƠ CHẾ", text: this.objective.mechanic, color: "#a78bfa"
-                }, {
-                    label: "GỢI Ý", text: this.objective.tip, color: "#22d3ee"
-                }],
-
-                hint: "ENTER / CLICK ĐỂ BẮT ĐẦU"
-            },
-
-            paused: {
-                title: "TẠM DỪNG", subtitle: "", color: "#fbbf24", height: 230,
-
-                sections: [{
-                    label: "", text: "Nhấn Tiếp tục hoặc Space để chơi tiếp", color: "#ffffff"
-                }],
-
-                hint: ""
-            },
-
-            won: {
-                title: "BẠN THẮNG!", subtitle: "", color: "#22c55e", height: 230,
-
-                sections: [{
-                    label: "", text: "Bạn đã hoàn thành toàn bộ mục tiêu.", color: "#ffffff"
-                }],
-
-                hint: ""
-            },
-
-            gameOver: {
-                title: "GAME OVER", subtitle: "", color: "#ef4444", height: 230,
-
-                sections: [{
-                    label: "", text: "Bạn đã hết mạng.", color: "#ffffff"
-                }],
-
-                hint: "Nhấn 'Chơi lại' hoặc 'F5' để thử lại"
-            }
-        };
-
-        const screen = screens[state];
-
-        if (!screen) {
+        if (state === "objective") {
+            title = `LEVEL ${this.level}`;
+            subtitle = this.objective.name.toUpperCase();
+            color = "cyan";
+            panelHeight = 500;
+        } else if (state === "paused") {
+            title = "TẠM DỪNG";
+            color = "orange";
+            text = "Nhấn Tiếp tục hoặc Space để chơi tiếp";
+        } else if (state === "won") {
+            title = "BẠN THẮNG!";
+            color = "limegreen";
+            text = "Bạn đã hoàn thành màn chơi.";
+        } else if (state === "gameOver") {
+            title = "GAME OVER";
+            color = "red";
+            text = "Bạn đã hết mạng.";
+        } else {
             return;
         }
 
         const centerX = this.canvas.width / 2;
         const centerY = this.canvas.height / 2;
         const panelWidth = 660;
-        const panelHeight = screen.height;
         const panelX = centerX - panelWidth / 2;
         const panelY = centerY - panelHeight / 2;
         this.ctx.save();
 
         // Overlay
-        this.ctx.fillStyle = "rgba(0, 0, 0, 0.72)";
+        this.ctx.fillStyle = "black";
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
         // Panel
-        this.ctx.fillStyle = "rgba(8, 17, 31, 0.95)";
+        this.ctx.fillStyle = "midnightblue";
         this.ctx.fillRect(panelX, panelY, panelWidth, panelHeight);
 
         // Border
-        this.ctx.strokeStyle = screen.color;
+        this.ctx.strokeStyle = color;
         this.ctx.lineWidth = 3;
         this.ctx.strokeRect(panelX, panelY, panelWidth, panelHeight);
         this.ctx.textAlign = "center";
         this.ctx.textBaseline = "middle";
 
         // Tiêu đề
-        this.ctx.fillStyle = screen.color;
+        this.ctx.fillStyle = color;
         this.ctx.font = "bold 38px monospace";
-        this.ctx.fillText(screen.title, centerX, panelY + 50);
-        let currentY = panelY + 95;
+        this.ctx.fillText(title, centerX, panelY + 50);
+        let currentY = panelY + 100;
 
         // Phụ đề
-        if (screen.subtitle) {
-            this.ctx.fillStyle = "#ffffff";
+        if (subtitle) {
+            this.ctx.fillStyle = "white";
             this.ctx.font = "bold 22px monospace";
-            this.ctx.fillText(screen.subtitle, centerX, currentY);
-            currentY += 45;
+            this.ctx.fillText(subtitle, centerX, currentY);
+            currentY += 50;
         }
 
         // Sections
-        for (const section of screen.sections) {
-            if (section.label) {
-                this.ctx.fillStyle = section.color;
-                this.ctx.font = "bold 15px monospace";
-                this.ctx.fillText(section.label, centerX, currentY);
-                currentY += 28;
-            }
+        if (state === "objective") {
+            const labels = [
+                ["MỤC TIÊU", this.objective.objective, "orange"],
+                ["CƠ CHẾ", this.objective.mechanic, "violet"],
+                ["GỢI Ý", this.objective.tip, "cyan"]
+            ];
 
-            this.ctx.fillStyle = section.label ? "#e2e8f0" : section.color;
+            for (const item of labels) {
+                this.ctx.fillStyle = item[2];
+                this.ctx.font = "bold 15px monospace";
+                this.ctx.fillText(item[0], centerX, currentY);
+                currentY += 25;
+
+                this.ctx.fillStyle = "white";
+                this.ctx.font = "16px Arial";
+                const lines = this.drawWrappedText(item[1], centerX, currentY, 540, 22);
+                currentY += lines * 22 + 25;
+            }
+        } else {
+            this.ctx.fillStyle = "white";
             this.ctx.font = "16px Arial";
-            const lineCount = this.drawWrappedText(section.text, centerX, currentY, 540, 22);
-            currentY += lineCount * 22 + 28;
+            this.drawWrappedText(text, centerX, currentY, 540, 22);
         }
 
         // Mẹo
-        if (screen.hint) {
-            this.ctx.fillStyle = "#22c55e";
+        if (state === "objective") {
+            this.ctx.fillStyle = "limegreen";
             this.ctx.font = "bold 14px monospace";
-            this.ctx.fillText(screen.hint, centerX, panelY + panelHeight - 28);
+            this.ctx.fillText("ENTER / CLICK ĐỂ BẮT ĐẦU", centerX, panelY + panelHeight - 28);
+        } else if (state === "gameOver") {
+            this.ctx.fillStyle = "limegreen";
+            this.ctx.font = "bold 14px monospace";
+            this.ctx.fillText("Nhấn Chơi lại hoặc F5 để thử lại", centerX, panelY + panelHeight - 28);
         }
 
         if (state === "won") {
@@ -803,12 +778,11 @@ export default class Game {
             const menuX = hasNextLevel ? centerX - buttonWidth - gap / 2 : centerX - buttonWidth / 2;
 
             // Menu button
-            this.ctx.fillStyle = "#334155";
+            this.ctx.fillStyle = "gray";
             this.ctx.fillRect(menuX, buttonY, buttonWidth, buttonHeight);
-            this.ctx.strokeStyle = "#ffffff";
-            this.ctx.lineWidth = 2;
+            this.ctx.strokeStyle = "white";
             this.ctx.strokeRect(menuX, buttonY, buttonWidth, buttonHeight);
-            this.ctx.fillStyle = "#ffffff";
+            this.ctx.fillStyle = "white";
             this.ctx.font = "bold 13px monospace";
             this.ctx.fillText("QUAY LẠI MENU", menuX + buttonWidth / 2, buttonY + buttonHeight / 2);
             this.screenButtons.menu = {x: menuX, y: buttonY, width: buttonWidth, height: buttonHeight};
@@ -816,11 +790,11 @@ export default class Game {
             // Next level
             if (hasNextLevel) {
                 const nextX = centerX + gap / 2;
-                this.ctx.fillStyle = "#2563eb";
+                this.ctx.fillStyle = "blue";
                 this.ctx.fillRect(nextX, buttonY, buttonWidth, buttonHeight);
-                this.ctx.strokeStyle = "#ffffff";
+                this.ctx.strokeStyle = "white";
                 this.ctx.strokeRect(nextX, buttonY, buttonWidth, buttonHeight);
-                this.ctx.fillStyle = "#ffffff";
+                this.ctx.fillStyle = "white";
                 this.ctx.fillText("MÀN TIẾP THEO", nextX + buttonWidth / 2, buttonY + buttonHeight / 2);
                 this.screenButtons.next = {x: nextX, y: buttonY, width: buttonWidth, height: buttonHeight};
             } else {
@@ -859,31 +833,14 @@ export default class Game {
         return lines.length;
     }
 
-    drawLevelText() {
-        this.ctx.save();
-
-        this.ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
-        this.ctx.font = "16px Arial";
-        this.ctx.textAlign = "center";
-
-        this.ctx.fillText(`Màn ${this.level}`, this.canvas.width / 2, 30);
-
-        this.ctx.restore();
-    }
-
-    getBackgroundPath() {
-        return `assets/images/lv${this.level}.png`;
-    }
-
     loadBackground() {
-        const imagePath = this.getBackgroundPath();
-        this.backgroundLoaded = false;
+        const imagePath = `assets/images/lv${this.level}.png`;
+
         this.backgroundImage.onload = () => {
             this.backgroundLoaded = true;
         };
 
         this.backgroundImage.onerror = () => {
-            console.error(`Không thể load background: ${imagePath}`);
             this.backgroundLoaded = false;
         };
 
@@ -896,9 +853,7 @@ export default class Game {
             return;
         }
 
-        this.ctx.save();
-        this.ctx.fillStyle = "#0b1020";
+        this.ctx.fillStyle = "navy";
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        this.ctx.restore();
     }
 }

@@ -20,7 +20,7 @@ export default class Target {
         this.visibleTime = options.visibleTime ?? 1.5;
         this.hiddenTime = options.hiddenTime ?? 1;
         this.visible = true;
-        this.blinkTimer = options.blinkOffset ?? 0;
+        this.blinkTimer = 0;
 
         // lv7
         this.type = options.type ?? "normal";
@@ -32,21 +32,9 @@ export default class Target {
 
     getPalette() {
         const palettes = [
-            {
-                main: "#ef4444",
-                dark: "#991b1b",
-                light: "#fca5a5"
-            },
-            {
-                main: "#f59e0b",
-                dark: "#92400e",
-                light: "#fde68a"
-            },
-            {
-                main: "#22c55e",
-                dark: "#166534",
-                light: "#bbf7d0"
-            }
+            {main: "red", dark: "darkred", light: "pink"},
+            {main: "orange", dark: "brown", light: "yellow"},
+            {main: "green", dark: "darkgreen", light: "lightgreen"}
         ];
 
         return palettes[this.variant % palettes.length];
@@ -81,7 +69,7 @@ export default class Target {
             const duration = this.visible ? this.visibleTime : this.hiddenTime;
 
             if (this.blinkTimer >= duration) {
-                this.blinkTimer -= duration;
+                this.blinkTimer = 0;
                 this.visible = !this.visible;
             }
         }
@@ -92,11 +80,11 @@ export default class Target {
             return;
         }
 
-        const { main, dark, light } = this.getPalette();
+        const {main, dark, light} = this.getPalette();
 
         ctx.save();
-        ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
-        ctx.fillRect(this.x + 3, this.y + 3, this.width, this.height);
+        ctx.fillStyle = "black";
+        ctx.fillRect(this.x + 2, this.y + 2, this.width, this.height);
 
         // Viền
         ctx.fillStyle = dark;
@@ -106,17 +94,20 @@ export default class Target {
         ctx.fillStyle = main;
         ctx.fillRect(this.x + 2, this.y + 2, this.width - 4, this.height - 4);
 
-        // Phần bóng
+        // Phần hightlight trên
         ctx.fillStyle = light;
-        ctx.fillRect(this.x + 4, this.y + 4, this.width - 8, 5);
+        ctx.fillRect(this.x + 4, this.y + 4, this.width - 8, 3);
 
         // Phần tối dưới đít
         ctx.fillStyle = dark;
-        ctx.fillRect(this.x + 4, this.y + this.height - 8, this.width - 8, 4);
+        ctx.fillRect(this.x + 4, this.y + this.height - 6, this.width - 8, 3);
 
         // bomb & trap
-        if (this.type !== "normal") {
-            ctx.fillStyle = this.type === "bomb" ? "#ff3b30" : "#a855f7";
+        if (this.type === "bomb") {
+            ctx.fillStyle = "red";
+            ctx.fillRect(this.x + 2, this.y + 2, this.width - 4, this.height - 4);
+        } else if (this.type === "trap") {
+            ctx.fillStyle = "purple";
             ctx.fillRect(this.x + 2, this.y + 2, this.width - 4, this.height - 4);
         }
 
