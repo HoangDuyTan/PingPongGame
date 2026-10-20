@@ -4,11 +4,295 @@
     <meta charset="UTF-8">
     <title>Ping Pong Game</title>
 
-    <link rel="stylesheet" href="css/variables.css">
-    <link rel="stylesheet" href="css/main.css">
+    <style>
+:root {
+    /* Màu */
+    --color-bg: midnightblue;
+    --color-bg-secondary: navy;
+    --color-surface: darkslategray;
+    --color-primary: dodgerblue;
+    --color-accent: cyan;
+    --color-success: limegreen;
+    --color-warning: orange;
+    --color-danger: red;
+    --color-text: white;
+    --color-text-muted: lightgray;
+    --color-border: gray;
+
+    /* Phông */
+    --font-main: Arial, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    min-height: 100vh;
+    font-family: var(--font-main);
+    background: var(--color-bg);
+    color: var(--color-text);
+}
+
+button,
+a {
+    font: inherit;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+.menu-page,
+.game-page {
+    width: 100%;
+}
+
+.menu-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    background-image: url("assets/images/menu-bg.png");
+    background-size: cover;
+    background-position: center;
+}
+
+.menu-page .main-menu {
+    width: 95vw;
+    max-width: 1000px;
+    padding: 25px;
+    background: var(--color-bg);
+    border: 2px solid var(--color-border);
+    border-radius: 10px;
+}
+
+.menu-page .game-header {
+    margin-bottom: 22px;
+}
+
+.menu-page .game-header h1 {
+    font-size: 64px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.menu-page .game-label {
+    color: var(--color-accent);
+    letter-spacing: 2px;
+}
+
+.menu-page .level-selection {
+    margin-bottom: 25px;
+}
+
+.menu-page .section-header {
+    margin-bottom: 15px;
+}
+
+.menu-page .section-header h2 {
+    font-size: 24px;
+}
+
+.menu-page .level-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+}
+
+.menu-page .level-button {
+    min-height: 75px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    background: var(--color-bg-secondary);
+    color: var(--color-text);
+    border: 2px solid var(--color-border);
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.menu-page .level-button:hover {
+    border-color: var(--color-primary);
+    background: var(--color-surface);
+}
+
+.menu-page .boss-level {
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+}
+
+.menu-page .instructions {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    padding-top: 18px;
+    border-top: 1px solid var(--color-border);
+}
+
+.menu-page .instructions h2 {
+    font-size: 20px;
+}
+
+.menu-page .instructions p {
+    max-width: 620px;
+    color: var(--color-text-muted);
+    line-height: 1.5;
+}
+
+.game-page {
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 15px;
+}
+
+.game-page .game-container {
+    width: 100%;
+}
+
+.game-page .game-header-container {
+    display: flex;
+    flex-direction: column;
+    width: 60%;
+    margin: 0 auto;
+}
+
+.game-page .game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.game-page .game-header h1 {
+    font-size: 30px;
+}
+
+.game-page #levelNumber {
+    color: var(--color-primary);
+}
+
+.game-page .back-button,
+.game-page .control-button {
+    padding: 9px 14px;
+    background: var(--color-surface);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.game-page .back-button:hover,
+.game-page .control-button:hover {
+    border-color: var(--color-primary);
+}
+
+.game-page .primary-button {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.game-page .game-info {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.game-page .info-card {
+    padding: 10px 14px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+}
+
+.game-page .info-label {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--color-text-muted);
+    font-size: 12px;
+}
+
+.game-page .info-card strong {
+    font-size: 20px;
+}
+
+.game-page #score {
+    color: var(--color-accent);
+}
+
+.game-page #lives {
+    color: var(--color-danger);
+}
+
+.game-page .game-area {
+    display: flex;
+    justify-content: center;
+}
+
+.game-page #gameCanvas {
+    display: block;
+    max-width: 100%;
+    background: var(--color-bg);
+    border: 2px solid var(--color-border);
+}
+
+.game-page .game-controls,
+.game-page .control-buttons {
+    display: flex;
+    gap: 8px;
+}
+    </style>
 </head>
 
 <body>
+<div id="gamePage" class="game-page" hidden>
+<main class="game-container">
+    <div class="game-header-container">
+        <header class="game-header">
+            <div>
+                <h1> Màn <span id="levelNumber">1</span></h1>
+            </div>
+
+            <section class="game-controls">
+                <div class="control-buttons">
+                    <button id="pauseButton" class="control-button" type="button" title="Bấm Space để tạm dừng">Tạm dừng</button>
+                    <button id="restartButton" class="control-button primary-button" type="button">Chơi lại</button>
+                    <a href="index.html" class="back-button">Menu</a>
+                </div>
+            </section>
+        </header>
+
+        <section class="game-info">
+            <div class="info-card">
+                <span class="info-label">Điểm: </span>
+                <strong id="score">0</strong>
+            </div>
+
+            <div class="info-card">
+                <span class="info-label">Mạng: </span>
+                <strong id="lives">3</strong>
+            </div>
+        </section>
+    </div>
+
+    <section class="game-area">
+        <canvas id="gameCanvas" width="900" height="600"></canvas>
+    </section>
+</main>
+
+</div>
+
+<div id="menuPage" class="menu-page" hidden>
 <main class="main-menu">
     <header class="game-header">
         <h1 class="game-label">Ping Pong</h1>
@@ -20,45 +304,16 @@
         </div>
 
         <div class="level-grid">
-            <a class="level-button" href="game.html?level=1">
-                Level 1
-            </a>
-
-            <a class="level-button" href="game.html?level=2">
-                Level 2
-            </a>
-
-            <a class="level-button" href="game.html?level=3">
-                Level 3
-            </a>
-
-            <a class="level-button" href="game.html?level=4">
-                Level 4
-            </a>
-
-            <a class="level-button" href="game.html?level=5">
-                Level 5
-            </a>
-
-            <a class="level-button" href="game.html?level=6">
-                Level 6
-            </a>
-
-            <a class="level-button" href="game.html?level=7">
-                Level 7
-            </a>
-
-            <a class="level-button" href="game.html?level=8">
-                Level 8
-            </a>
-
-            <a class="level-button" href="game.html?level=9">
-                Level 9
-            </a>
-
-            <a class="level-button boss-level" href="game.html?level=10">
-                Level 10
-            </a>
+            <a class="level-button" href="index.html?level=1">Level 1</a>
+            <a class="level-button" href="index.html?level=2">Level 2</a>
+            <a class="level-button" href="index.html?level=3">Level 3</a>
+            <a class="level-button" href="index.html?level=4">Level 4</a>
+            <a class="level-button" href="index.html?level=5">Level 5</a>
+            <a class="level-button" href="index.html?level=6">Level 6</a>
+            <a class="level-button" href="index.html?level=7">Level 7</a>
+            <a class="level-button" href="index.html?level=8">Level 8</a>
+            <a class="level-button" href="index.html?level=9">Level 9</a>
+            <a class="level-button boss-level" href="index.html?level=10">Level 10</a>
         </div>
     </section>
 
@@ -71,5 +326,8 @@
         </p>
     </section>
 </main>
+</div>
+
+<script src="game.js"></script>
 </body>
 </html>
