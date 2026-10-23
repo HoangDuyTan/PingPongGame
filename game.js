@@ -2006,7 +2006,7 @@ class Game {
     }
 
     loadBackground() {
-        const imagePath = `assets/images/lv${this.level}.png`;
+        const imagePath = `assets/images/lv${this.level}.webp`;
 
         this.backgroundImage.onload = () => {
             this.backgroundLoaded = true;
